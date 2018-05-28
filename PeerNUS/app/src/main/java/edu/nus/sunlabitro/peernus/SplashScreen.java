@@ -18,13 +18,15 @@ public class SplashScreen extends AppCompatActivity {
             @Override
             public void run() {
                 /* Create an Intent that will start the Menu-Activity. */
-                if (getSharedPreferences("users", 0) != null) {
-                    Intent mainIntent = new Intent(SplashScreen.this, MainActivity.class);
-                    SplashScreen.this.startActivity(mainIntent);
-                    SplashScreen.this.finish();
-                } else {
+                Intent intent = null;
 
+                if (getSharedPreferences("users", 0).equals("")) {
+                    intent = new Intent(SplashScreen.this, MainActivity.class);
+                } else {
+                    intent = new Intent(SplashScreen.this, Login.class);
                 }
+                SplashScreen.this.startActivity(intent);
+                SplashScreen.this.finish();
             }
         }, SPLASH_DISPLAY_LENGTH);
     }
