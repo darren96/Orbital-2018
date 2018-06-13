@@ -8,76 +8,101 @@
     tools:context=".Login"
     tools:showIn="@layout/activity_login">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/login"
-        android:gravity="bottom"
-        android:paddingBottom="100sp"
-        android:orientation="vertical">
+        android:background="@drawable/login" >
 
-        <ImageView
-            android:layout_width="200sp"
-            android:layout_height="50sp"
+        <TextView
+            android:layout_width="225sp"
+            android:layout_height="85dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
             android:layout_gravity="center_horizontal"
-            android:src="@drawable/peernus_logo"
+            android:layout_marginTop="40dp"
             android:background="@drawable/background"
-            android:layout_marginBottom="150sp"/>
+            android:fontFamily="@font/montserrat_bold"
+            android:text="PeerNUS"
+            android:textColor="@color/colorPrimary"
+            android:gravity="center"
+            android:textSize="40dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_margin="8dp">
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="100dp"
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/montserrat_regular"
-                android:layout_gravity="center_vertical"
-                android:layout_weight="1"
-                android:text="NUSNet ID:"
-                android:textColor="#000000"
-                android:textSize="20sp" />
+            android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/nusnet"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="6"
-                android:fontFamily="@font/montserrat_regular"
-                android:hint="NUSNet ID"
-                android:layout_gravity="right"/>
+                android:layout_margin="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:text="NUSNet ID:"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/nusnet"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:layout_weight="6"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:hint="NUSNet ID" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:text="Password: "
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/password"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="6"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:hint="Password"
+                    android:inputType="textPassword" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <Button
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:orientation="horizontal">
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center"
+            android:layout_marginBottom="30dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/montserrat_bold"
+            android:text="Login"
+            android:textColor="@color/colorAccent" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_weight="1"
-                android:fontFamily="@font/montserrat_regular"
-                android:text="Password: "
-                android:textColor="#000000"
-                android:textSize="20sp" />
-
-            <EditText
-                android:id="@+id/password"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="6"
-                android:fontFamily="@font/montserrat_regular"
-                android:hint="Password"
-                android:inputType="textPassword" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

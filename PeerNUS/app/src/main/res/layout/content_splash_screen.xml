@@ -10,24 +10,16 @@
     tools:showIn="@layout/activity_splash_screen">
 
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
         <ImageView
             android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:layout_gravity="center" />
+            android:layout_height="match_parent"
+            android:src="@drawable/peernus_splash"
+            android:layout_margin="50dp"
+            android:gravity="center" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/montserrat_bold"
-            android:text="PeerNUS"
-            android:textAlignment="center"
-            android:textSize="36sp"
-            android:textColor="#FFFFFF"/>
-
-    </LinearLayout>
+    </RelativeLayout>
 </android.support.constraint.ConstraintLayout>
