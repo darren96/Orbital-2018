@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".UpdateProfileFragment">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="10dp">
+
+            <TableRow>
+
+                <RelativeLayout
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:layout_span="2">
+
+                    <ImageView
+                        android:id="@+id/profilePic"
+                        android:layout_width="125dp"
+                        android:layout_height="125dp"
+                        android:src="@drawable/profile" />
+
+                    <View
+                        android:layout_width="125dp"
+                        android:layout_height="125dp"
+                        android:background="@drawable/round_corner_mask" />
+                </RelativeLayout>
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:text="Name: "/>
+
+                <EditText
+                    android:id="@+id/name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="John Doe"/>
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:text="Sex: "/>
+
+                <RadioGroup
+                    android:id="@+id/sex"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" >
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/female"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Female"/>
+
+                        <RadioButton
+                            android:id="@+id/male"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Male"/>
+
+                    </LinearLayout>
+
+                </RadioGroup>
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:text="Year of Studies: "/>
+
+                <EditText
+                    android:id="@+id/yearOfStudies"
+                    android:layout_width="210dp"
+                    android:layout_height="wrap_content"
+                    android:hint="1, 2, 3, 4 or 5"
+                    android:inputType="number"/>
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:text="Courses: "/>
+
+                <LinearLayout
+                    android:orientation="vertical">
+
+                    <Spinner
+                        android:id="@+id/course1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <Spinner
+                        android:id="@+id/course2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+
+                </LinearLayout>
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:text="Modules: "/>
+
+                <LinearLayout
+                    android:orientation="vertical">
+
+                    <Spinner
+                        android:id="@+id/module1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <Spinner
+                        android:id="@+id/module2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <Spinner
+                        android:id="@+id/module3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <Spinner
+                        android:id="@+id/module4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorPrimary"
+                        android:fontFamily="@font/montserrat_bold"
+                        android:textColor="@color/colorAccent"
+                        android:paddingHorizontal="5dp"
+                        android:text="Add More Module"/>
+
+                </LinearLayout>
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:text="Description: "/>
+
+                <EditText
+                    android:id="@+id/description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lines="3"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical" />
+
+            </TableRow>
+
+        </TableLayout>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/montserrat_bold"
+            android:textColor="@color/colorAccent"
+            android:layout_marginTop="15dp"
+            android:paddingHorizontal="10dp"
+            android:text="Save Profile"/>
+
+    </ScrollView>
+
+
+</FrameLayout>
