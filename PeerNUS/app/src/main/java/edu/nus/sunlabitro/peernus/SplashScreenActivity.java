@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
-public class SplashScreen extends AppCompatActivity {
+public class SplashScreenActivity extends AppCompatActivity {
 
     private final int SPLASH_DISPLAY_LENGTH = 1000;
 
@@ -21,12 +21,12 @@ public class SplashScreen extends AppCompatActivity {
                 Intent intent = null;
 
                 if (getSharedPreferences("users", 0).equals("")) {
-                    intent = new Intent(SplashScreen.this, MainActivity.class);
+                    intent = new Intent(SplashScreenActivity.this, MainActivity.class);
                 } else {
-                    intent = new Intent(SplashScreen.this, Login.class);
+                    intent = new Intent(SplashScreenActivity.this, LoginActivity.class);
                 }
-                SplashScreen.this.startActivity(intent);
-                SplashScreen.this.finish();
+                SplashScreenActivity.this.startActivity(intent);
+                SplashScreenActivity.this.finish();
             }
         }, SPLASH_DISPLAY_LENGTH);
     }
