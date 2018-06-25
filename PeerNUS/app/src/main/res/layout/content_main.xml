@@ -8,7 +8,12 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <TableLayout
+    <FrameLayout
+        android:id="@+id/fragment_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="10dp">
@@ -71,6 +76,6 @@
 
         </TableRow>
 
-    </TableLayout>
+    </TableLayout-->
 
 </android.support.constraint.ConstraintLayout>

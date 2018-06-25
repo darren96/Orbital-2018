@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "265258503283",
+    "firebase_url": "https://peernus-96580.firebaseio.com",
+    "project_id": "peernus-96580",
+    "storage_bucket": "peernus-96580.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:265258503283:android:df6da3a95d6eec40",
+        "android_client_info": {
+          "package_name": "edu.nus.sunlabitro.peernus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "265258503283-jk3isu61d6vmgv746613r0ip165d6aak.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.nus.sunlabitro.peernus",
+            "certificate_hash": "029a4bb34f6c2bb79f22783c9f35a1ab72c25e40"
+          }
+        },
+        {
+          "client_id": "265258503283-8savj6p2pn2c78pn8g32ivrl2iuqjjkd.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "265258503283-8savj6p2pn2c78pn8g32ivrl2iuqjjkd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQa9w_LSOXSBZVe0i6F4FMiqFmSQoisRo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "265258503283-8savj6p2pn2c78pn8g32ivrl2iuqjjkd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
