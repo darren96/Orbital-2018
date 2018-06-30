@@ -8,6 +8,13 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_splash_screen">Splash Screen</string>
     <string name="title_activity_login">Login</string>
+    <string name="HOST">peernus.000webhostapp.com</string>
+    <string name="COURSES_DIR">Courses</string>
+    <string name="PROFILE_DIR">Profile</string>
+    <string name="NUSMOD_HOST">api.nusmods.com</string>
+    <string name="MOD_DIR">2017-2018</string>
+    <string name="search_hint">Eg: CS1010</string>
+    <string name="USER_PREF">user</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
