@@ -146,7 +146,6 @@ public class LoginActivity extends AppCompatActivity {
                     getSharedPreferences(USER_PREF, MODE_PRIVATE).edit();
             editor.putString("email", user.getEmail());
             editor.apply();
-
             intent = new Intent(LoginActivity.this, MainActivity.class);
             Bundle bundle = new Bundle();
             bundle.putBoolean("isRegistered", isRegistered);

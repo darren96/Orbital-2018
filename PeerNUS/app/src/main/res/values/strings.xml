@@ -11,6 +11,7 @@
     <string name="HOST">peernus.000webhostapp.com</string>
     <string name="COURSES_DIR">Courses</string>
     <string name="PROFILE_DIR">Profile</string>
+    <string name="MATCHES_DIR">Matches</string>
     <string name="NUSMOD_HOST">api.nusmods.com</string>
     <string name="MOD_DIR">2017-2018</string>
     <string name="search_hint">Eg: CS1010</string>

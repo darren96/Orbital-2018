@@ -41,7 +41,7 @@ import java.util.ArrayList;
  * create an instance of this fragment.
  */
 public class UpdateProfileFragment extends Fragment
-        implements OnTaskCompleted{
+        implements OnTaskCompleted {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -445,11 +445,10 @@ public class UpdateProfileFragment extends Fragment
 
         REQ_TYPE = retrieveProfile;
         nusnet = getActivity().getSharedPreferences(USER_PREF, Context.MODE_PRIVATE)
-                .getString("email", null);
+                .getString("email", "");
         jsonString = convertToJSON(REQ_TYPE);
         task.execute("https://"+HOST+"/"+PROFILE_DIR+"/retrieveProfile.php", jsonString, "POST",
                 REQ_TYPE);
-
 
     }
 
