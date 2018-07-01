@@ -15,11 +15,13 @@
         <item
             android:id="@+id/nav_chat"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="Chats" />
+            android:title="Chats"
+            android:enabled="false" />
         <item
             android:id="@+id/nav_setting"
             android:icon="@drawable/ic_menu_manage"
-            android:title="Settings" />
+            android:title="Settings"
+            android:enabled="false" />
         <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_menu_manage"
@@ -31,11 +33,13 @@
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="Share"
+                android:enabled="false" />
             <item
                 android:id="@+id/nav_send"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:title="Send"
+                android:enabled="false" />
         </menu>
     </item>
 
