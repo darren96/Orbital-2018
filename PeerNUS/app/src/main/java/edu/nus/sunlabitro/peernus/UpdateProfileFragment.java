@@ -20,6 +20,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseUser;
 
@@ -245,11 +246,6 @@ public class UpdateProfileFragment extends Fragment
         String faculty;
 
         String mCourseListStr = mCourseList.getText().toString();
-        if (mCourseListStr.equals("") || mCourseListStr.equals(null)) {
-            mCourseList.setText(tmp);
-        } else {
-            mCourseList.setText(mCourseListStr + ", " + tmp);
-        }
 
         try {
             JSONObject selectedCourse =
@@ -257,10 +253,24 @@ public class UpdateProfileFragment extends Fragment
             id = selectedCourse.getInt("course_id");
             courseName = selectedCourse.getString("name");
             faculty = selectedCourse.getString("faculty");
-            selectedCourseList.add(id);
+
+            if (mCourseListStr.equals("") || mCourseListStr.equals(null)) {
+                mCourseList.setText(tmp);
+                selectedCourseList.add(id);
+            } else {
+                if (!selectedCourseList.contains(id)) {
+                    mCourseList.setText(mCourseListStr + ", " + tmp);
+                    selectedCourseList.add(id);
+                }
+                else {
+                    Toast.makeText(getContext(),"You have already added the course!", Toast.LENGTH_LONG).show();
+                }
+            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
     }
 
     private void selectModule(String selectedModuleId, String selectedModuleCode) {
@@ -269,16 +279,23 @@ public class UpdateProfileFragment extends Fragment
     }
 
     private void addModule() {
-        String modCode = mModule.getText().toString();
+        String modCode = mModule.getText().toString().toUpperCase();
 
         String mModuleListStr = mModuleList.getText().toString();
         if (mModuleListStr.equals("") || mModuleListStr.equals(null)) {
             mModuleList.setText(modCode);
         } else {
-            mModuleList.setText(mModuleListStr + ", " + modCode);
+            if (!selectedModuleList.contains(modCode)) {
+                mModuleList.setText(mModuleListStr + ", " + modCode);
+            }
+            else {
+                Toast.makeText(getContext(),"You have already added the module!", Toast.LENGTH_LONG).show();
+            }
         }
 
         selectedModuleList.add(modCode);
+        mModule.setText("");
+
     }
 
     // TODO: Rename method, update argument and hook method into UI event
