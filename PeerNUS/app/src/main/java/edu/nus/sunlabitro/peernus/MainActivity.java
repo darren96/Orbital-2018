@@ -40,6 +40,7 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         UpdateProfileFragment.OnFragmentInteractionListener,
+        DisplayProfileFragment.OnFragmentInteractionListener,
         OnTaskCompleted {
 
     private TextView mName;
@@ -52,10 +53,7 @@ public class MainActivity extends AppCompatActivity
     private final String retrieveProfile = "202";
 
     private static String HOST;
-    private static String NUSMOD_HOST;
-    private static String MOD_DIR;
     private static String PROFILE_DIR;
-    private static String COURSES_DIR;
     private static String MATCHES_DIR;
 
     private String email;
@@ -89,9 +87,6 @@ public class MainActivity extends AppCompatActivity
         USER_PREF = getString(R.string.USER_PREF);
         HOST = getString(R.string.HOST);
         PROFILE_DIR = getString(R.string.PROFILE_DIR);
-        COURSES_DIR = getString(R.string.COURSES_DIR);
-        NUSMOD_HOST = getString(R.string.NUSMOD_HOST);
-        MOD_DIR = getString(R.string.MOD_DIR);
         MATCHES_DIR = getString(R.string.MATCHES_DIR);
 
         Boolean isRegistered = getIntent().getExtras().getBoolean("isRegistered");
@@ -236,6 +231,7 @@ public class MainActivity extends AppCompatActivity
                     fragment.setArguments(args);
                     transaction.replace(R.id.fragment_frame, fragment);
                     transaction.addToBackStack(null);
+                    transaction.commit();
                 }
             });
         } else if (REQ_TYPE.equals(retrieveProfile)) {

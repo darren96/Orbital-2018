@@ -1,12 +1,26 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONStringer;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 
 /**
@@ -17,15 +31,28 @@ import android.view.ViewGroup;
  * Use the {@link DisplayProfileFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class DisplayProfileFragment extends Fragment {
+public class DisplayProfileFragment extends Fragment
+        implements OnTaskCompleted {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM1 = "nusnet";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private final String retrieveProfile = "301";
+    private static String HOST;
+    private static String PROFILE_DIR;
+
+    private String nusnet;
     private String mParam2;
+
+    private TextView nameTV;
+    private TextView sexTV;
+    private TextView yearOfStudiesTV;
+    private TextView courseTV;
+    private TextView modulesTV;
+    private TextView descriptionTV;
+    private Button btnSendMessage;
 
     private OnFragmentInteractionListener mListener;
 
@@ -55,16 +82,38 @@ public class DisplayProfileFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            nusnet = getArguments().getString(ARG_PARAM1);
         }
+
+        HOST = getString(R.string.HOST);
+        PROFILE_DIR = getString(R.string.PROFILE_DIR);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_display_profile, container, false);
+        View view = inflater.inflate(R.layout.fragment_display_profile, container, false);
+
+        nameTV = (TextView) view.findViewById(R.id.name);
+        sexTV = (TextView) view.findViewById(R.id.sex);
+        yearOfStudiesTV = (TextView) view.findViewById(R.id.yearOfStudies);
+        courseTV = (TextView) view.findViewById(R.id.course);
+        modulesTV = (TextView) view.findViewById(R.id.module);
+        descriptionTV = (TextView) view.findViewById(R.id.description);
+        btnSendMessage = (Button) view.findViewById(R.id.btnSendMessage);
+
+        btnSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        retrieveProfile();
+
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -105,4 +154,77 @@ public class DisplayProfileFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+    private void retrieveProfile() {
+        String REQ_TYPE = retrieveProfile;
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+PROFILE_DIR+"/retrieveProfile.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
+    @Override
+    public void onTaskCompleted(String response, String REQ_TYPE) {
+        if (REQ_TYPE.equals(retrieveProfile)) {
+            retrieveFromJSON(response, REQ_TYPE);
+        }
+    }
+
+    // Convert profile information to JSON string
+    public String convertToJSON(String REQ_TYPE) {
+        JSONStringer jsonText = new JSONStringer();
+        try {
+
+            jsonText.object();
+            if (REQ_TYPE.equals(retrieveProfile)) {
+                jsonText.key("nusnet");
+                jsonText.value(nusnet);
+            }
+            jsonText.endObject();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return jsonText.toString();
+    }
+
+    // Retrieve profile information from JSON string
+    public void retrieveFromJSON(String message, String REQ_TYPE) {
+        try {
+
+            if (REQ_TYPE.equals(retrieveProfile)) {
+                JSONObject jsonObject = new JSONObject(message);
+                int id = jsonObject.getInt("id");
+
+                String name = jsonObject.getString("name");
+                String sex = jsonObject.getString("sex");
+                int matricYear = Integer.parseInt(jsonObject.getString("matricYear"));
+                JSONArray courseJsonArray = jsonObject.getJSONArray("course");
+
+                String courseStr = "";
+                for (int i = 0; i < courseJsonArray.length(); i++) {
+                    courseStr += courseJsonArray.getString(i) + "\n";
+                }
+
+                JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
+                String moduleStr = "";
+                for (int i = 0; i < moduleJsonArray.length(); i++) {
+                    moduleStr += moduleJsonArray.get(i).toString() + "\n";
+                }
+
+                String description = jsonObject.getString("description");
+
+                nameTV.setText(name);
+                sexTV.setText(sex);
+                yearOfStudiesTV.setText(String.valueOf(matricYear));
+                courseTV.setText(courseStr);
+                modulesTV.setText(moduleStr);
+                descriptionTV.setText(description);
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
