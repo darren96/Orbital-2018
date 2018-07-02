@@ -3,13 +3,10 @@ package edu.nus.sunlabitro.peernus;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
+import android.app.FragmentTransaction;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -19,47 +16,37 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         UpdateProfileFragment.OnFragmentInteractionListener,
         DisplayProfileFragment.OnFragmentInteractionListener,
+        MatchesFragment.OnFragmentInteractionListener,
         OnTaskCompleted {
 
-    private TextView mName;
-    private TextView mEmail;
-    private ImageView mProfilePic;
-    private ListView mMatchesListView;
-
-    private String USER_PREF;
-    private final String getMatches = "201";
     private final String retrieveProfile = "202";
 
     private static String HOST;
     private static String PROFILE_DIR;
     private static String MATCHES_DIR;
+    private String USER_PREF;
 
+    private TextView mName;
+    private TextView mEmail;
+    private ImageView mProfilePic;
+
+    private boolean isRegistered;
     private String email;
-
-    private JSONArray matches;
-    private ArrayList<Profile> matchesArrayList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +62,11 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        USER_PREF = getString(R.string.USER_PREF);
+        HOST = getString(R.string.HOST);
+        PROFILE_DIR = getString(R.string.PROFILE_DIR);
+        MATCHES_DIR = getString(R.string.MATCHES_DIR);
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
@@ -82,14 +74,9 @@ public class MainActivity extends AppCompatActivity
         mName = (TextView) headerView.findViewById(R.id.userName);
         mProfilePic = (ImageView) headerView.findViewById(R.id.profilePic);
 
-        mMatchesListView = (ListView) findViewById(R.id.matchesList);
+        isRegistered = getIntent().getExtras().getBoolean("isRegistered");
 
-        USER_PREF = getString(R.string.USER_PREF);
-        HOST = getString(R.string.HOST);
-        PROFILE_DIR = getString(R.string.PROFILE_DIR);
-        MATCHES_DIR = getString(R.string.MATCHES_DIR);
-
-        Boolean isRegistered = getIntent().getExtras().getBoolean("isRegistered");
+        retrieveProfile();
 
         email = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE)
                 .getString("email", "");
@@ -99,7 +86,7 @@ public class MainActivity extends AppCompatActivity
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
             Fragment fragment = new UpdateProfileFragment();
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -110,10 +97,6 @@ public class MainActivity extends AppCompatActivity
 
             // Commit the transaction
             transaction.commit();
-        } else {
-            retrieveProfile();
-            getMatches();
-//            mName.setText("");
         }
     }
 
@@ -157,9 +140,19 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_home) {
             // Handle the camera action
+            Fragment fragment = new MatchesFragment();
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+            // Replace whatever is in the fragment_container view with this fragment,
+            // and add the transaction to the back stack
+            transaction.replace(R.id.fragment_frame, fragment);
+            transaction.addToBackStack(null);
+
+            // Commit the transaction
+            transaction.commit();
         } else if (id == R.id.nav_profile) {
             Fragment fragment = new UpdateProfileFragment();
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -179,6 +172,8 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             MainActivity.this.startActivity(intent);
             MainActivity.this.finish();
+            SharedPreferences.Editor editor = getSharedPreferences(USER_PREF, MODE_PRIVATE).edit();
+            editor.clear().commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -189,14 +184,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFragmentInteraction(Uri uri) {
 
-    }
-
-    private void getMatches() {
-        String REQ_TYPE = getMatches;
-        String jsonString = convertToJSON(REQ_TYPE);
-        HttpAsyncTask task = new HttpAsyncTask(this);
-        task.execute("https://"+HOST+"/"+MATCHES_DIR+"/retrieveMatches.php", jsonString, "POST",
-                REQ_TYPE);
     }
 
     private void retrieveProfile() {
@@ -211,31 +198,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onTaskCompleted(String response, String REQ_TYPE) {
-        if (REQ_TYPE.equals(getMatches)) {
+        if (REQ_TYPE.equals(retrieveProfile)) {
             retrieveFromJSON(response, REQ_TYPE);
-            MatchesListAdapter matchesListAdapter =
-                    new MatchesListAdapter(this, generateData());
-            mMatchesListView.setAdapter(matchesListAdapter);
-            mMatchesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Fragment fragment = new DisplayProfileFragment();
-                    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-                    // Replace whatever is in the fragment_container view with this fragment,
-                    // and add the transaction to the back stack
-                    Bundle args = new Bundle();
-                    TextView nusnetTV = (TextView) view.findViewById(R.id.nusnet);
-                    String nusnet = nusnetTV.getText().toString();
-                    args.putString("nusnet", nusnet);
-                    fragment.setArguments(args);
-                    transaction.replace(R.id.fragment_frame, fragment);
-                    transaction.addToBackStack(null);
-                    transaction.commit();
-                }
-            });
-        } else if (REQ_TYPE.equals(retrieveProfile)) {
-            retrieveFromJSON(response, REQ_TYPE);
+            generateUI();
         }
     }
 
@@ -245,18 +210,7 @@ public class MainActivity extends AppCompatActivity
         try {
 
             jsonText.object();
-            if (REQ_TYPE.equals(getMatches)) {
-                jsonText.key("course");
-                Set<String> course = getSharedPreferences(USER_PREF, MODE_PRIVATE)
-                        .getStringSet("course", null);
-                jsonText.array();
-                HashSet courseHashSet = new HashSet(course);
-                Iterator<String> courseIterator = courseHashSet.iterator();
-                while (courseIterator.hasNext()) {
-                    jsonText.value(courseIterator.next());
-                }
-                jsonText.endArray();
-            } else if (REQ_TYPE.equals(retrieveProfile)) {
+            if (REQ_TYPE.equals(retrieveProfile)) {
                 jsonText.key("nusnet");
                 jsonText.value(email);
             }
@@ -272,11 +226,7 @@ public class MainActivity extends AppCompatActivity
     public void retrieveFromJSON(String message, String REQ_TYPE) {
         try {
 
-            if (REQ_TYPE.equals(getMatches)) {
-                JSONObject jsonObject = new JSONObject(message);
-                matches = jsonObject.getJSONArray("results");
-                Log.d("JSON Courses", matches.toString());
-            } else if (REQ_TYPE.equals(retrieveProfile)) {
+            if (REQ_TYPE.equals(retrieveProfile)) {
                 JSONObject jsonObject = new JSONObject(message);
                 int id = jsonObject.getInt("id");
 
@@ -289,6 +239,12 @@ public class MainActivity extends AppCompatActivity
                     selectedCourseSet.add(courseJsonArray.getString(i));
                 }
 
+                JSONArray courseIdJsonArray = jsonObject.getJSONArray("courseId");
+                HashSet<String> selectedCourseIdSet = new HashSet<>();
+                for (int i = 0; i < courseIdJsonArray.length(); i++) {
+                    selectedCourseSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
+                }
+
                 JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
                 HashSet<String> selectedModuleSet = new HashSet<>();
                 for (int i = 0; i < moduleJsonArray.length(); i++) {
@@ -298,47 +254,34 @@ public class MainActivity extends AppCompatActivity
                 String description = jsonObject.getString("description");
 
                 SharedPreferences.Editor editor =
-                        getSharedPreferences(USER_PREF, MODE_PRIVATE).edit();
+                        getSharedPreferences(USER_PREF, Context.MODE_PRIVATE).edit();
                 editor.putInt("id", id);
                 editor.putString("name", name);
                 editor.putString("sex", sex);
                 editor.putInt("matricYear", matricYear);
                 editor.putStringSet("course", selectedCourseSet);
+                editor.putStringSet("courseId", selectedCourseIdSet);
                 editor.putStringSet("modules", selectedModuleSet);
                 editor.putString("description", description);
                 editor.apply();
-
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private ArrayList<Profile> generateData(){
-        ArrayList<Profile> profileArrayList = new ArrayList<>();
-        JSONObject profileObj = null;
-        int id;
-        String name;
-        String nusnet;
-        int matricYear;
-        ArrayList<String> course = new ArrayList<>();
-        for (int i = 0; i < matches.length(); i++) {
-            try {
-                profileObj = matches.getJSONObject(i);
-                id = profileObj.getInt("id");
-                name = profileObj.getString("name");
-                nusnet = profileObj.getString("nusnet");
-                matricYear = profileObj.getInt("matricYear");
-                JSONArray courseJSONArray = profileObj.getJSONArray("course");
-                for (int j = 0; j < courseJSONArray.length(); j++) {
-                    course.add(courseJSONArray.get(j).toString());
-                }
-                profileArrayList.add(new Profile (id, name, nusnet, matricYear, course));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
+    private void generateUI() {
+        if(isRegistered) {
+            Fragment fragment = new MatchesFragment();
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
-        return profileArrayList;
+            // Replace whatever is in the fragment_container view with this fragment,
+            // and add the transaction to the back stack
+            transaction.replace(R.id.fragment_frame, fragment);
+            transaction.addToBackStack(null);
+
+            // Commit the transaction
+            transaction.commit();
+        }
     }
 }

@@ -1,26 +1,18 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
+import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONStringer;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 
 /**

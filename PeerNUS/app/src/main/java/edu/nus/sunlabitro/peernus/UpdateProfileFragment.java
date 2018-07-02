@@ -1,9 +1,10 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -28,6 +29,9 @@ import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 
 /**
@@ -54,7 +58,6 @@ public class UpdateProfileFragment extends Fragment
 
     private static String getCourses = "101";
     private static String getModules = "102";
-    private static String retrieveProfile = "103";
     private static String registerProfile = "104";
     private static String updateProfile = "105";
 
@@ -92,6 +95,9 @@ public class UpdateProfileFragment extends Fragment
     private String sex;
     private int matricYear;
     private String description;
+
+    private boolean isInitialAddCourse = true;
+    private boolean isInitialAddModule = true;
 
     private OnFragmentInteractionListener mListener;
 
@@ -163,6 +169,8 @@ public class UpdateProfileFragment extends Fragment
         mAddModuleBtn = (Button) view.findViewById(R.id.btnAddModule);
         mSaveProfileBtn = (Button) view.findViewById(R.id.btnSaveProfile);
 
+        retrieveProfile();
+
         mAddCourseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -187,7 +195,7 @@ public class UpdateProfileFragment extends Fragment
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String query = mModule.getText().toString();
                 ModuleListAdapter moduleListAdapter =
-                        new ModuleListAdapter(getContext(), generateData(query));
+                        new ModuleListAdapter(getActivity(), generateData(query));
                 mModuleListView.setAdapter(moduleListAdapter);
                 mModuleListView.setVisibility(View.VISIBLE);
             }
@@ -237,6 +245,49 @@ public class UpdateProfileFragment extends Fragment
         return view;
     }
 
+    private void retrieveProfile() {
+        SharedPreferences sharedPreferences = getActivity()
+                .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+        id = sharedPreferences.getInt("id", 0);
+
+        name = sharedPreferences.getString("name", "");
+        sex = sharedPreferences.getString("sex", "");
+        matricYear = sharedPreferences.getInt("matricYear", 0);
+        Set<String> courseSet = sharedPreferences.getStringSet("course", null);
+        Iterator<String> courseIterator = courseSet.iterator();
+        Set<String> courseIdSet = sharedPreferences.getStringSet("courseId", null);
+        Iterator<String> courseIdIterator = courseIdSet.iterator();
+        String course = "";
+        while (courseIterator.hasNext()) {
+            selectedCourseList.add(Integer.parseInt(courseIdIterator.next()));
+            course += courseIterator.next() + "\n";
+        }
+
+        Set<String> modulesSet = sharedPreferences.getStringSet("modules", null);
+        Iterator<String> moduleIterator = modulesSet.iterator();
+        String modules = "";
+        String modCode = "";
+        while (moduleIterator.hasNext()) {
+            modCode = moduleIterator.next();
+            selectedModuleList.add(modCode);
+            modules += modCode + "\n";
+        }
+
+        description = sharedPreferences.getString("description", "");
+
+        mName.setText(name);
+        if (sex.equals("male")) {
+            mSex.check(R.id.male);
+        } else {
+            mSex.check(R.id.female);
+        }
+        mYearofStudies.setText(String.valueOf(matricYear));
+        mCourseList.setText(course);
+        mModuleList.setText(modules);
+        mDescription.setText(description);
+
+    }
+
     private void addCourse() {
         String tmp = mCourse.getSelectedItem().toString();
         int id;
@@ -245,24 +296,23 @@ public class UpdateProfileFragment extends Fragment
 
         String mCourseListStr = mCourseList.getText().toString();
 
+        if (isInitialAddCourse) {
+            selectedCourseList = new ArrayList<>();
+            mCourseListStr = "";
+            isInitialAddCourse = false;
+        }
+
         try {
             JSONObject selectedCourse =
                     courses.getJSONObject(mCourse.getSelectedItemPosition());
             id = selectedCourse.getInt("course_id");
-            courseName = selectedCourse.getString("name");
-            faculty = selectedCourse.getString("faculty");
 
-            if (mCourseListStr.equals("") || mCourseListStr.equals(null)) {
-                mCourseList.setText(tmp);
+            if (!selectedCourseList.contains(id)) {
+                mCourseList.setText(mCourseListStr + tmp + "\n");
                 selectedCourseList.add(id);
-            } else {
-                if (!selectedCourseList.contains(id)) {
-                    mCourseList.setText(mCourseListStr + ", " + tmp);
-                    selectedCourseList.add(id);
-                }
-                else {
-                    Toast.makeText(getContext(),"You have already added the course!", Toast.LENGTH_LONG).show();
-                }
+            }
+            else {
+                Toast.makeText(getActivity(),"You have already added the course!", Toast.LENGTH_LONG).show();
             }
 
         } catch (JSONException e) {
@@ -280,15 +330,18 @@ public class UpdateProfileFragment extends Fragment
         String modCode = mModule.getText().toString().toUpperCase();
 
         String mModuleListStr = mModuleList.getText().toString();
-        if (mModuleListStr.equals("") || mModuleListStr.equals(null)) {
-            mModuleList.setText(modCode);
-        } else {
-            if (!selectedModuleList.contains(modCode)) {
-                mModuleList.setText(mModuleListStr + ", " + modCode);
-            }
-            else {
-                Toast.makeText(getContext(),"You have already added the module!", Toast.LENGTH_LONG).show();
-            }
+
+        if (isInitialAddModule) {
+            selectedModuleList = new ArrayList<>();
+            mModuleListStr = "";
+            isInitialAddModule = false;
+        }
+
+        if (!selectedModuleList.contains(modCode)) {
+            mModuleList.setText(mModuleListStr + modCode + "\n");
+        }
+        else {
+            Toast.makeText(getActivity(),"You have already added the module!", Toast.LENGTH_LONG).show();
         }
 
         selectedModuleList.add(modCode);
@@ -336,7 +389,7 @@ public class UpdateProfileFragment extends Fragment
 
             String[] courseArray = course.toArray(new String[course.size()]);
             ArrayAdapter<String> arrayAdapter =
-                    new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, courseArray);
+                    new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, courseArray);
 
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
 
@@ -355,25 +408,6 @@ public class UpdateProfileFragment extends Fragment
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            }
-        } else if (REQ_TYPE.equals(retrieveProfile)) {
-            HttpAsyncTask task = new HttpAsyncTask(this);
-
-            name = mName.getText().toString();
-            matricYear = Integer.parseInt(mYearofStudies.getText().toString());
-            description = mDescription.getText().toString();
-            String jsonString;
-
-            if (id > 0) {
-                REQ_TYPE = updateProfile;
-                jsonString = convertToJSON(REQ_TYPE);
-                task.execute("https://" + HOST + "/" + PROFILE_DIR + "/updateProfile.php", jsonString, "POST",
-                        REQ_TYPE);
-            } else {
-                REQ_TYPE = registerProfile;
-                jsonString = convertToJSON(REQ_TYPE);
-                task.execute("https://" + HOST + "/" + PROFILE_DIR + "/registerProfile.php", jsonString, "POST",
-                        REQ_TYPE);
             }
         }
 
@@ -438,15 +472,23 @@ public class UpdateProfileFragment extends Fragment
     public void uploadProfile() {
         String REQ_TYPE;
         String jsonString;
-        id = 0;
         HttpAsyncTask task = new HttpAsyncTask(this);
 
-        REQ_TYPE = retrieveProfile;
-        nusnet = getActivity().getSharedPreferences(USER_PREF, Context.MODE_PRIVATE)
-                .getString("email", "");
-        jsonString = convertToJSON(REQ_TYPE);
-        task.execute("https://"+HOST+"/"+PROFILE_DIR+"/retrieveProfile.php", jsonString, "POST",
-                REQ_TYPE);
+        name = mName.getText().toString();
+        matricYear = Integer.parseInt(mYearofStudies.getText().toString());
+        description = mDescription.getText().toString();
+
+        if (id > 0) {
+            REQ_TYPE = updateProfile;
+            jsonString = convertToJSON(REQ_TYPE);
+            task.execute("https://" + HOST + "/" + PROFILE_DIR + "/updateProfile.php", jsonString, "POST",
+                    REQ_TYPE);
+        } else {
+            REQ_TYPE = registerProfile;
+            jsonString = convertToJSON(REQ_TYPE);
+            task.execute("https://" + HOST + "/" + PROFILE_DIR + "/registerProfile.php", jsonString, "POST",
+                    REQ_TYPE);
+        }
 
     }
 
@@ -481,9 +523,6 @@ public class UpdateProfileFragment extends Fragment
                 jsonText.endArray();
                 jsonText.key("description");
                 jsonText.value(description);
-            } else if (REQ_TYPE.equals(retrieveProfile)) {
-                jsonText.key("nusnet");
-                jsonText.value(nusnet);
             }
             jsonText.endObject();
 
@@ -504,29 +543,44 @@ public class UpdateProfileFragment extends Fragment
             } else if (REQ_TYPE.equals(getModules)) {
                 modules = new JSONArray(message);
                 Log.d("JSON Modules", modules.toString());
-            } else if (REQ_TYPE.equals(retrieveProfile)) {
+            } else if (REQ_TYPE.equals(registerProfile) || REQ_TYPE.equals((updateProfile))) {
                 JSONObject jsonObject = new JSONObject(message);
-                id = jsonObject.getInt("id");
-                /*
-                name = jsonObject.getString("name");
-                sex = jsonObject.getString("sex");
-                matricYear = Integer.parseInt(jsonObject.getString("matricYear"));
-                JSONArray courseJsonArray = jsonObject.getJSONArray("course");
-                selectedCourseList = new ArrayList<>();
-                for (int i = 0; i < courseJsonArray.length(); i++) {
-                    selectedCourseList.add(courseJsonArray.getInt(i));
-                }
+                String status = jsonObject.getString("Status");
+                if (status.equals("OK")) {
+                    Toast.makeText(getActivity(),"Profile updated successfully!", Toast.LENGTH_SHORT).show();
 
-                JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
-                selectedModuleList = new ArrayList<>();
-                for (int i = 0; i < moduleJsonArray.length(); i++) {
-                    selectedModuleList.add(moduleJsonArray.get(i).toString());
+                    JSONArray courseJsonArray = jsonObject.getJSONArray("course");
+                    HashSet<String> selectedCourseSet = new HashSet<>();
+                    for (int i = 0; i < courseJsonArray.length(); i++) {
+                        selectedCourseSet.add(courseJsonArray.getString(i));
+                    }
+
+                    JSONArray courseIdJsonArray = jsonObject.getJSONArray("courseId");
+                    HashSet<String> selectedCourseIdSet = new HashSet<>();
+                    for (int i = 0; i < courseIdJsonArray.length(); i++) {
+                        selectedCourseSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
+                    }
+
+                    JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
+                    HashSet<String> selectedModuleSet = new HashSet<>();
+                    for (int i = 0; i < moduleJsonArray.length(); i++) {
+                        selectedModuleSet.add(moduleJsonArray.get(i).toString());
+                    }
+
+                    SharedPreferences.Editor editor = getActivity().
+                            getSharedPreferences(USER_PREF, Context.MODE_PRIVATE).edit();
+                    editor.putInt("id", id);
+                    editor.putString("name", name);
+                    editor.putString("sex", sex);
+                    editor.putInt("matricYear", matricYear);
+                    editor.putStringSet("course", selectedCourseSet);
+                    editor.putStringSet("courseId", selectedCourseIdSet);
+                    editor.putStringSet("modules", selectedModuleSet);
+                    editor.putString("description", description);
+                    editor.apply();
+                } else {
+                    Toast.makeText(getActivity(),"Profile update failed!", Toast.LENGTH_LONG).show();
                 }
-                */
-                Log.d("ID", String.valueOf(id));
-            } else if (REQ_TYPE.equals(registerProfile)) {
-                Log.d("JSON Profile", message);
-            } else if (REQ_TYPE.equals(updateProfile)) {
                 Log.d("JSON Profile", message);
             }
         } catch (Exception e) {
