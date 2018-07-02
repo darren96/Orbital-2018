@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity
                 JSONArray courseIdJsonArray = jsonObject.getJSONArray("courseId");
                 HashSet<String> selectedCourseIdSet = new HashSet<>();
                 for (int i = 0; i < courseIdJsonArray.length(); i++) {
-                    selectedCourseSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
+                    selectedCourseIdSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
                 }
 
                 JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");

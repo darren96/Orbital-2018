@@ -253,6 +253,8 @@ public class UpdateProfileFragment extends Fragment
         name = sharedPreferences.getString("name", "");
         sex = sharedPreferences.getString("sex", "");
         matricYear = sharedPreferences.getInt("matricYear", 0);
+
+        selectedCourseList = new ArrayList<>();
         Set<String> courseSet = sharedPreferences.getStringSet("course", null);
         Iterator<String> courseIterator = courseSet.iterator();
         Set<String> courseIdSet = sharedPreferences.getStringSet("courseId", null);
@@ -263,6 +265,7 @@ public class UpdateProfileFragment extends Fragment
             course += courseIterator.next() + "\n";
         }
 
+        selectedModuleList = new ArrayList<>();
         Set<String> modulesSet = sharedPreferences.getStringSet("modules", null);
         Iterator<String> moduleIterator = modulesSet.iterator();
         String modules = "";

@@ -231,8 +231,9 @@ public class MatchesFragment extends Fragment
         String name;
         String nusnet;
         int matricYear;
-        ArrayList<String> course = new ArrayList<>();
+        ArrayList<String> course;
         for (int i = 0; i < matches.length(); i++) {
+            course = new ArrayList<>();
             try {
                 profileObj = matches.getJSONObject(i);
                 id = profileObj.getInt("id");
@@ -241,7 +242,7 @@ public class MatchesFragment extends Fragment
                 matricYear = profileObj.getInt("matricYear");
                 JSONArray courseJSONArray = profileObj.getJSONArray("course");
                 for (int j = 0; j < courseJSONArray.length(); j++) {
-                    course.add(courseJSONArray.get(j).toString());
+                    course.add(courseJSONArray.getString(j));
                 }
                 profileArrayList.add(new Profile (id, name, nusnet, matricYear, course));
             } catch (JSONException e) {
