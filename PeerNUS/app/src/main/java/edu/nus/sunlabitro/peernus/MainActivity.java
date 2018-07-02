@@ -78,8 +78,11 @@ public class MainActivity extends AppCompatActivity
 
         retrieveProfile();
 
-        email = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE)
-                .getString("email", "");
+        SharedPreferences sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+        email = sharedPreferences.getString("email", "");
+        String name = sharedPreferences.getString("name", "");
+
+        mName.setText(name);
         mEmail.setText(email);
 
         if (!isRegistered) {
