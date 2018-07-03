@@ -1,10 +1,10 @@
 package edu.nus.sunlabitro.peernus;
 
-import android.app.FragmentTransaction;
+import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -162,8 +162,9 @@ public class MatchesFragment extends Fragment
             mMatchesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    android.app.Fragment fragment = new DisplayProfileFragment();
-                    FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                    Fragment fragment = new DisplayProfileFragment();
+                    FragmentTransaction transaction = getActivity()
+                            .getSupportFragmentManager().beginTransaction();
 
                     // Replace whatever is in the fragment_container view with this fragment,
                     // and add the transaction to the back stack
@@ -172,7 +173,7 @@ public class MatchesFragment extends Fragment
                     String nusnet = nusnetTV.getText().toString();
                     args.putString("nusnet", nusnet);
                     fragment.setArguments(args);
-                    transaction.replace(R.id.fragment_frame, fragment, "currentFragment");
+                    transaction.replace(R.id.fragment_frame, fragment);
                     transaction.addToBackStack(null);
                     transaction.commit();
                 }

@@ -3,10 +3,10 @@ package edu.nus.sunlabitro.peernus;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.app.FragmentTransaction;
+import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
             Fragment fragment = new UpdateProfileFragment();
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_home) {
             // Handle the camera action
             Fragment fragment = new MatchesFragment();
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity
             transaction.commit();
         } else if (id == R.id.nav_profile) {
             Fragment fragment = new UpdateProfileFragment();
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity
     private void generateUI() {
         if(isRegistered) {
             Fragment fragment = new MatchesFragment();
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
