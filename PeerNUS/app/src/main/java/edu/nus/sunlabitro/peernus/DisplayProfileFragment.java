@@ -1,6 +1,7 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,10 +34,15 @@ public class DisplayProfileFragment extends Fragment
 
     // TODO: Rename and change types of parameters
     private final String retrieveProfile = "301";
+    private final String sendRequest = "302";
     private static String HOST;
     private static String PROFILE_DIR;
+    private static String REQUEST_DIR;
+    private static String USER_PREF;
 
     private String nusnet;
+    private int senderId;
+    private int receiverId;
     private String mParam2;
 
     private TextView nameTV;
@@ -44,7 +51,7 @@ public class DisplayProfileFragment extends Fragment
     private TextView courseTV;
     private TextView modulesTV;
     private TextView descriptionTV;
-    private Button btnSendMessage;
+    private Button btnSendRequest;
 
     private OnFragmentInteractionListener mListener;
 
@@ -79,6 +86,8 @@ public class DisplayProfileFragment extends Fragment
 
         HOST = getString(R.string.HOST);
         PROFILE_DIR = getString(R.string.PROFILE_DIR);
+        REQUEST_DIR = getString(R.string.REQUEST_DIR);
+        USER_PREF = getString(R.string.USER_PREF);
 
     }
 
@@ -94,12 +103,12 @@ public class DisplayProfileFragment extends Fragment
         courseTV = (TextView) view.findViewById(R.id.course);
         modulesTV = (TextView) view.findViewById(R.id.module);
         descriptionTV = (TextView) view.findViewById(R.id.description);
-        btnSendMessage = (Button) view.findViewById(R.id.btnSendMessage);
+        btnSendRequest = (Button) view.findViewById(R.id.btnSendRequest);
 
-        btnSendMessage.setOnClickListener(new View.OnClickListener() {
+        btnSendRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                sendRequest();
             }
         });
 
@@ -155,11 +164,20 @@ public class DisplayProfileFragment extends Fragment
                 REQ_TYPE);
     }
 
+    private void sendRequest() {
+        SharedPreferences sharedPreferences = getActivity()
+                .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+        senderId = sharedPreferences.getInt("id", 0);
+        String REQ_TYPE = sendRequest;
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+REQUEST_DIR+"/sendRequest.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
     @Override
     public void onTaskCompleted(String response, String REQ_TYPE) {
-        if (REQ_TYPE.equals(retrieveProfile)) {
-            retrieveFromJSON(response, REQ_TYPE);
-        }
+        retrieveFromJSON(response, REQ_TYPE);
     }
 
     // Convert profile information to JSON string
@@ -171,6 +189,11 @@ public class DisplayProfileFragment extends Fragment
             if (REQ_TYPE.equals(retrieveProfile)) {
                 jsonText.key("nusnet");
                 jsonText.value(nusnet);
+            } else if (REQ_TYPE.equals(sendRequest)) {
+                jsonText.key("senderId");
+                jsonText.value(senderId);
+                jsonText.key("receiverId");
+                jsonText.value(receiverId);
             }
             jsonText.endObject();
 
@@ -183,10 +206,10 @@ public class DisplayProfileFragment extends Fragment
     // Retrieve profile information from JSON string
     public void retrieveFromJSON(String message, String REQ_TYPE) {
         try {
+            JSONObject jsonObject = new JSONObject(message);
 
             if (REQ_TYPE.equals(retrieveProfile)) {
-                JSONObject jsonObject = new JSONObject(message);
-                int id = jsonObject.getInt("id");
+                receiverId = jsonObject.getInt("id");
 
                 String name = jsonObject.getString("name");
                 String sex = jsonObject.getString("sex");
@@ -213,7 +236,17 @@ public class DisplayProfileFragment extends Fragment
                 modulesTV.setText(moduleStr);
                 descriptionTV.setText(description);
 
+            } else if (REQ_TYPE.equals(sendRequest)) {
+                String status = jsonObject.getString("Status");
+                if (status.equals("OK")) {
+                    Toast.makeText(getActivity(), "Friends Request Sent", Toast.LENGTH_LONG)
+                            .show();
+                } else {
+                    Toast.makeText(getActivity(), "Request Failed. Please Try Again Later.", Toast.LENGTH_LONG)
+                            .show();
+                }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

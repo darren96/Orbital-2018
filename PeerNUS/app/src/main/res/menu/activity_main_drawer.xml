@@ -13,14 +13,13 @@
             android:icon="@drawable/ic_menu_gallery"
             android:title="Profile" />
         <item
-            android:id="@+id/nav_chat"
+            android:id="@+id/nav_request"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="Chats"
-            android:enabled="false" />
+            android:title="Friend Request"/>
         <item
-            android:id="@+id/nav_setting"
+            android:id="@+id/nav_friend"
             android:icon="@drawable/ic_menu_manage"
-            android:title="Settings"
+            android:title="Friends"
             android:enabled="false" />
         <item
             android:id="@+id/nav_logout"
@@ -31,9 +30,9 @@
     <item android:title="Communicate">
         <menu>
             <item
-                android:id="@+id/nav_share"
+                android:id="@+id/nav_chat"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share"
+                android:title="Chats"
                 android:enabled="false" />
             <item
                 android:id="@+id/nav_send"

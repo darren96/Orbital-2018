@@ -176,7 +176,7 @@
             </TableRow>
 
             <Button
-                android:id="@+id/btnSendMessage"
+                android:id="@+id/btnSendRequest"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -184,7 +184,7 @@
                 android:background="@color/colorPrimary"
                 android:fontFamily="@font/montserrat_bold"
                 android:paddingHorizontal="10dp"
-                android:text="Send Message"
+                android:text="Send a Friend Request"
                 android:textColor="@color/colorAccent" />
 
         </TableLayout>

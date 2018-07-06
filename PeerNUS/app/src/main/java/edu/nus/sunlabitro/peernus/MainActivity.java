@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity
         UpdateProfileFragment.OnFragmentInteractionListener,
         DisplayProfileFragment.OnFragmentInteractionListener,
         MatchesFragment.OnFragmentInteractionListener,
+        RequestsListFragment.OnFragmentInteractionListener,
         OnTaskCompleted {
 
     private final String retrieveProfile = "202";
@@ -164,11 +165,20 @@ public class MainActivity extends AppCompatActivity
 
             // Commit the transaction
             transaction.commit();
+        } else if (id == R.id.nav_request) {
+            Fragment fragment = new RequestsListFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            // Replace whatever is in the fragment_container view with this fragment,
+            // and add the transaction to the back stack
+            transaction.replace(R.id.fragment_frame, fragment);
+            transaction.addToBackStack(null);
+
+            // Commit the transaction
+            transaction.commit();
+        } else if (id == R.id.nav_friend) {
+
         } else if (id == R.id.nav_chat) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
 
         } else if (id == R.id.nav_logout) {
             FirebaseAuth.getInstance().signOut();
