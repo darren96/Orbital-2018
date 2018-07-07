@@ -175,6 +175,7 @@
 
             </TableRow>
 
+
             <Button
                 android:id="@+id/btnSendRequest"
                 android:layout_width="wrap_content"
@@ -184,8 +185,56 @@
                 android:background="@color/colorPrimary"
                 android:fontFamily="@font/montserrat_bold"
                 android:paddingHorizontal="10dp"
-                android:text="Send a Friend Request"
-                android:textColor="@color/colorAccent" />
+                android:textColor="@color/colorAccent"
+                android:visibility="gone"
+                android:text="Add Friend" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnAcceptRequest"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/colorPrimary"
+                    android:fontFamily="@font/montserrat_bold"
+                    android:paddingHorizontal="10dp"
+                    android:textColor="@color/colorAccent"
+                    android:visibility="gone"
+                    android:text="Accept" />
+
+                <Button
+                    android:id="@+id/btnCancelRequest"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/colorPrimary"
+                    android:fontFamily="@font/montserrat_bold"
+                    android:paddingHorizontal="10dp"
+                    android:textColor="@color/colorAccent"
+                    android:visibility="gone"
+                    android:text="Cancel" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnSendMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginTop="15dp"
+                android:background="@color/colorPrimary"
+                android:fontFamily="@font/montserrat_bold"
+                android:paddingHorizontal="10dp"
+                android:textColor="@color/colorAccent"
+                android:visibility="gone"
+                android:text="Send Message" />
 
         </TableLayout>
 

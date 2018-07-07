@@ -9,14 +9,14 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class MatchesListAdapter extends ArrayAdapter<Profile> {
+public class ProfilesListAdapter extends ArrayAdapter<Profile> {
 
     private final Context context;
     private final ArrayList<Profile> profilesArrayList;
 
-    public MatchesListAdapter(Context context, ArrayList<Profile> profilesArrayList) {
+    public ProfilesListAdapter(Context context, ArrayList<Profile> profilesArrayList) {
 
-        super(context, R.layout.matches_list, profilesArrayList);
+        super(context, R.layout.profiles_list, profilesArrayList);
 
         this.context = context;
         this.profilesArrayList = profilesArrayList;
@@ -30,7 +30,7 @@ public class MatchesListAdapter extends ArrayAdapter<Profile> {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         // 2. Get rowView from inflater
-        View rowView = inflater.inflate(R.layout.matches_list, parent, false);
+        View rowView = inflater.inflate(R.layout.profiles_list, parent, false);
 
         // 3. Get the two text view from the rowView
         TextView nameTV = (TextView) rowView.findViewById(R.id.name);

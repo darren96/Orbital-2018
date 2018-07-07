@@ -30,20 +30,28 @@ public class DisplayProfileFragment extends Fragment
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "nusnet";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_PARAM2 = "purpose";
 
     // TODO: Rename and change types of parameters
     private final String retrieveProfile = "301";
     private final String sendRequest = "302";
+    private final String acceptRequest = "303";
+    private final String cancelRequest = "304";
+    private final String sendMessage = "305";
+
+    private final String getMatches = "getMatches";
+    private final String retrieveRequests = "getRequests";
+    private final String retrieveFriends = "getFriends";
+
     private static String HOST;
     private static String PROFILE_DIR;
     private static String REQUEST_DIR;
     private static String USER_PREF;
 
     private String nusnet;
+    private String purpose;
     private int senderId;
     private int receiverId;
-    private String mParam2;
 
     private TextView nameTV;
     private TextView sexTV;
@@ -52,6 +60,9 @@ public class DisplayProfileFragment extends Fragment
     private TextView modulesTV;
     private TextView descriptionTV;
     private Button btnSendRequest;
+    private Button btnAcceptRequest;
+    private Button btnCancelRequest;
+    private Button btnSendMessage;
 
     private OnFragmentInteractionListener mListener;
 
@@ -82,6 +93,7 @@ public class DisplayProfileFragment extends Fragment
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             nusnet = getArguments().getString(ARG_PARAM1);
+            purpose = getArguments().getString(ARG_PARAM2);
         }
 
         HOST = getString(R.string.HOST);
@@ -104,13 +116,38 @@ public class DisplayProfileFragment extends Fragment
         modulesTV = (TextView) view.findViewById(R.id.module);
         descriptionTV = (TextView) view.findViewById(R.id.description);
         btnSendRequest = (Button) view.findViewById(R.id.btnSendRequest);
+        btnAcceptRequest = (Button) view.findViewById(R.id.btnAcceptRequest);
+        btnCancelRequest = (Button) view.findViewById(R.id.btnCancelRequest);
+        btnSendMessage = (Button) view.findViewById(R.id.btnSendMessage);
 
-        btnSendRequest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendRequest();
-            }
-        });
+        if (purpose.equals(getMatches)) {
+            btnSendRequest.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sendRequest();
+                }
+            });
+
+            btnSendRequest.setVisibility(View.VISIBLE);
+        } else if (purpose.equals(retrieveRequests)) {
+            btnAcceptRequest.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    acceptRequest();
+                }
+            });
+            btnCancelRequest.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    cancelRequest();
+                }
+            });
+
+            btnAcceptRequest.setVisibility(View.VISIBLE);
+            btnCancelRequest.setVisibility(View.VISIBLE);
+        } else if (purpose.equals(retrieveFriends)) {
+            btnSendMessage.setVisibility(View.VISIBLE);
+        }
 
         retrieveProfile();
 
@@ -175,6 +212,22 @@ public class DisplayProfileFragment extends Fragment
                 REQ_TYPE);
     }
 
+    private void acceptRequest() {
+        String REQ_TYPE = acceptRequest;
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+REQUEST_DIR+"/acceptRequest.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
+    private void cancelRequest() {
+        String REQ_TYPE = cancelRequest;
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+REQUEST_DIR+"/cancelRequest.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
     @Override
     public void onTaskCompleted(String response, String REQ_TYPE) {
         retrieveFromJSON(response, REQ_TYPE);
@@ -189,7 +242,8 @@ public class DisplayProfileFragment extends Fragment
             if (REQ_TYPE.equals(retrieveProfile)) {
                 jsonText.key("nusnet");
                 jsonText.value(nusnet);
-            } else if (REQ_TYPE.equals(sendRequest)) {
+            } else if (REQ_TYPE.equals(sendRequest) || REQ_TYPE.equals(acceptRequest)
+                    || REQ_TYPE.equals(cancelRequest)) {
                 jsonText.key("senderId");
                 jsonText.value(senderId);
                 jsonText.key("receiverId");
@@ -243,6 +297,24 @@ public class DisplayProfileFragment extends Fragment
                             .show();
                 } else {
                     Toast.makeText(getActivity(), "Request Failed. Please Try Again Later.", Toast.LENGTH_LONG)
+                            .show();
+                }
+            } else if (REQ_TYPE.equals(acceptRequest)) {
+                String status = jsonObject.getString("Status");
+                if (status.equals("OK")) {
+                    Toast.makeText(getActivity(), "Friends Request Accepted", Toast.LENGTH_LONG)
+                            .show();
+                } else {
+                    Toast.makeText(getActivity(), "Acceptance Failed. Please Try Again Later.", Toast.LENGTH_LONG)
+                            .show();
+                }
+            } else if (REQ_TYPE.equals(cancelRequest)) {
+                String status = jsonObject.getString("Status");
+                if (status.equals("OK")) {
+                    Toast.makeText(getActivity(), "Cancel Request Sent", Toast.LENGTH_LONG)
+                            .show();
+                } else {
+                    Toast.makeText(getActivity(), "Cancellation Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
                 }
             }

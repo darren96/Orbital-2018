@@ -1,11 +1,11 @@
 package edu.nus.sunlabitro.peernus;
 
-import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.v4.app.FragmentTransaction;
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,45 +20,50 @@ import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link RequestsListFragment.OnFragmentInteractionListener} interface
+ * {@link ProfilesListFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link RequestsListFragment#newInstance} factory method to
+ * Use the {@link ProfilesListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class RequestsListFragment extends Fragment
+public class ProfilesListFragment extends Fragment
         implements OnTaskCompleted {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM1 = "purpose";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private String purpose;
     private String mParam2;
 
-    private ListView mRequestsListView;
+    private ListView mMatchesListView;
+    private TextView mNoDataTextView;
 
     private String USER_PREF;
-    private final String retrieveRequests = "201";
-    private final String retrieveProfile = "202";
+    private final String getMatches = "getMatches";
+    private final String retrieveRequests = "getRequests";
+    private final String retrieveFriends = "getFriends";
 
     private static String HOST;
+    private static String MATCHES_DIR;
     private static String REQUEST_DIR;
+    private static String FRIENDS_DIR;
 
     private int id;
-
     private String email;
 
-    private JSONArray requests;
+    private JSONArray profiles;
 
     private OnFragmentInteractionListener mListener;
 
-    public RequestsListFragment() {
+    public ProfilesListFragment() {
         // Required empty public constructor
     }
 
@@ -68,11 +73,11 @@ public class RequestsListFragment extends Fragment
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment RequestsListFragment.
+     * @return A new instance of fragment MatchesFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static RequestsListFragment newInstance(String param1, String param2) {
-        RequestsListFragment fragment = new RequestsListFragment();
+    public static ProfilesListFragment newInstance(String param1, String param2) {
+        ProfilesListFragment fragment = new ProfilesListFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -84,7 +89,7 @@ public class RequestsListFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            purpose = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
@@ -93,14 +98,24 @@ public class RequestsListFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_requests_list, container, false);
-        mRequestsListView = (ListView) view.findViewById(R.id.requestsListView);
+        View view = inflater.inflate(R.layout.fragment_profiles_list, container, false);
+        mMatchesListView = (ListView) view.findViewById(R.id.matchesList);
+        mNoDataTextView = (TextView) view.findViewById(R.id.noData);
 
         USER_PREF = getString(R.string.USER_PREF);
         HOST = getString(R.string.HOST);
+        MATCHES_DIR = getString(R.string.MATCHES_DIR);
         REQUEST_DIR = getString(R.string.REQUEST_DIR);
+        FRIENDS_DIR = getString(R.string.FRIENDS_DIR);
 
-        getRequests();
+        if (purpose.equals(getMatches)) {
+            getMatches();
+        } else if (purpose.equals(retrieveRequests)) {
+            getRequests();
+        } else if (purpose.equals(retrieveFriends)) {
+            getFriends();
+        }
+
         return view;
     }
 
@@ -143,6 +158,14 @@ public class RequestsListFragment extends Fragment
         void onFragmentInteraction(Uri uri);
     }
 
+    private void getMatches() {
+        String REQ_TYPE = getMatches;
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+MATCHES_DIR+"/retrieveMatches.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
     private void getRequests() {
         String REQ_TYPE = retrieveRequests;
 
@@ -156,55 +179,94 @@ public class RequestsListFragment extends Fragment
                 REQ_TYPE);
     }
 
+    private void getFriends() {
+        String REQ_TYPE = retrieveFriends;
+
+        SharedPreferences sharedPreferences = getActivity()
+                .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+        id = sharedPreferences.getInt("id", 0);
+
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+FRIENDS_DIR+"/retrieveFriends.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
     @Override
     public void onTaskCompleted(String response, String REQ_TYPE) {
         retrieveFromJSON(response, REQ_TYPE);
-        MatchesListAdapter matchesListAdapter =
-                new MatchesListAdapter(getActivity(), generateData());
-        mRequestsListView.setAdapter(matchesListAdapter);
-        mRequestsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Fragment fragment = new DisplayProfileFragment();
-                FragmentTransaction transaction = getActivity()
-                        .getSupportFragmentManager().beginTransaction();
 
-                // Replace whatever is in the fragment_container view with this fragment,
-                // and add the transaction to the back stack
-                Bundle args = new Bundle();
-                TextView nusnetTV = (TextView) view.findViewById(R.id.nusnet);
-                String nusnet = nusnetTV.getText().toString();
-                args.putString("nusnet", nusnet);
-                fragment.setArguments(args);
-                transaction.replace(R.id.fragment_frame, fragment);
-                transaction.addToBackStack(null);
-                transaction.commit();
-            }
-        });
+        ArrayList<Profile> profileList = generateData();
+        if (profileList.size() != 0) {
+            ProfilesListAdapter profilesListAdapter =
+                    new ProfilesListAdapter(getActivity(), generateData());
+            mMatchesListView.setAdapter(profilesListAdapter);
+            mMatchesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Fragment fragment = new DisplayProfileFragment();
+                    FragmentTransaction transaction = getActivity()
+                            .getSupportFragmentManager().beginTransaction();
+
+                    // Replace whatever is in the fragment_container view with this fragment,
+                    // and add the transaction to the back stack
+                    Bundle args = new Bundle();
+                    TextView nusnetTV = (TextView) view.findViewById(R.id.nusnet);
+                    String nusnet = nusnetTV.getText().toString();
+                    args.putString("nusnet", nusnet);
+                    args.putString("purpose", purpose);
+                    fragment.setArguments(args);
+                    transaction.replace(R.id.fragment_frame, fragment);
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                }
+            });
+        } else {
+            mNoDataTextView.setVisibility(View.VISIBLE);
+        }
     }
 
-    private String convertToJSON(String REQ_TYPE) {
+    // Convert profile information to JSON string
+    public String convertToJSON(String REQ_TYPE) {
         JSONStringer jsonText = new JSONStringer();
-
+        String courseStr = "";
         try {
+
             jsonText.object();
-            jsonText.key("receiverId");
-            jsonText.value(id);
+            if (REQ_TYPE.equals(getMatches)) {
+                jsonText.key("course");
+                Set<String> course = getActivity()
+                        .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE)
+                        .getStringSet("course", null);
+                jsonText.array();
+                Iterator<String> courseIterator = course.iterator();
+                while (courseIterator.hasNext()) {
+                    courseStr = courseIterator.next();
+                    jsonText.value(courseStr);
+                    Log.d("getMatches", courseStr);
+                }
+                jsonText.endArray();
+            } else if (REQ_TYPE.equals(retrieveRequests)) {
+                jsonText.key("receiverId");
+                jsonText.value(id);
+            } else if (REQ_TYPE.equals(retrieveFriends)) {
+                jsonText.key("id");
+                jsonText.value(id);
+            }
             jsonText.endObject();
-        } catch (JSONException e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
         return jsonText.toString();
     }
 
-    private void retrieveFromJSON(String message, String REQ_TYPE) {
+    // Retrieve profile information from JSON string
+    public void retrieveFromJSON(String message, String REQ_TYPE) {
         try {
             JSONObject jsonObject = new JSONObject(message);
-            requests = jsonObject.getJSONArray("results");
-
-            Log.d("JSON Requests", requests.toString());
-
+            profiles = jsonObject.getJSONArray("results");
+            Log.d("JSON Courses", profiles.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -218,10 +280,10 @@ public class RequestsListFragment extends Fragment
         String nusnet;
         int matricYear;
         ArrayList<String> course;
-        for (int i = 0; i < requests.length(); i++) {
+        for (int i = 0; i < profiles.length(); i++) {
             course = new ArrayList<>();
             try {
-                profileObj = requests.getJSONObject(i);
+                profileObj = profiles.getJSONObject(i);
                 id = profileObj.getInt("id");
                 name = profileObj.getString("name");
                 nusnet = profileObj.getString("nusnet");

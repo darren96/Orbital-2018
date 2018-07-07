@@ -31,8 +31,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         UpdateProfileFragment.OnFragmentInteractionListener,
         DisplayProfileFragment.OnFragmentInteractionListener,
-        MatchesFragment.OnFragmentInteractionListener,
-        RequestsListFragment.OnFragmentInteractionListener,
+        ProfilesListFragment.OnFragmentInteractionListener,
         OnTaskCompleted {
 
     private final String retrieveProfile = "202";
@@ -144,8 +143,12 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_home) {
             // Handle the camera action
-            Fragment fragment = new MatchesFragment();
+            Fragment fragment = new ProfilesListFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("purpose", "getMatches");
+            fragment.setArguments(bundle);
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -166,8 +169,12 @@ public class MainActivity extends AppCompatActivity
             // Commit the transaction
             transaction.commit();
         } else if (id == R.id.nav_request) {
-            Fragment fragment = new RequestsListFragment();
+            Fragment fragment = new ProfilesListFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("purpose", "getRequests");
+            fragment.setArguments(bundle);
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -177,7 +184,20 @@ public class MainActivity extends AppCompatActivity
             // Commit the transaction
             transaction.commit();
         } else if (id == R.id.nav_friend) {
+            Fragment fragment = new ProfilesListFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
+            Bundle bundle = new Bundle();
+            bundle.putString("purpose", "getFriends");
+            fragment.setArguments(bundle);
+
+            // Replace whatever is in the fragment_container view with this fragment,
+            // and add the transaction to the back stack
+            transaction.replace(R.id.fragment_frame, fragment);
+            transaction.addToBackStack(null);
+
+            // Commit the transaction
+            transaction.commit();
         } else if (id == R.id.nav_chat) {
 
         } else if (id == R.id.nav_logout) {
@@ -285,8 +305,12 @@ public class MainActivity extends AppCompatActivity
 
     private void generateUI() {
         if(isRegistered) {
-            Fragment fragment = new MatchesFragment();
+            Fragment fragment = new ProfilesListFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("purpose", "getMatches");
+            fragment.setArguments(bundle);
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
