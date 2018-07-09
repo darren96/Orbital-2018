@@ -279,6 +279,7 @@ public class ProfilesListFragment extends Fragment
         String name;
         String nusnet;
         int matricYear;
+        int profilePic;
         ArrayList<String> course;
         for (int i = 0; i < profiles.length(); i++) {
             course = new ArrayList<>();
@@ -292,7 +293,8 @@ public class ProfilesListFragment extends Fragment
                 for (int j = 0; j < courseJSONArray.length(); j++) {
                     course.add(courseJSONArray.getString(j));
                 }
-                profileArrayList.add(new Profile (id, name, nusnet, matricYear, course));
+                profilePic = profileObj.getInt("profilePic");
+                profileArrayList.add(new Profile (id, name, nusnet, matricYear, course, profilePic));
             } catch (JSONException e) {
                 e.printStackTrace();
             }

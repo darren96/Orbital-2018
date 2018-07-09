@@ -2,15 +2,24 @@ package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -43,6 +52,8 @@ public class DisplayProfileFragment extends Fragment
     private final String retrieveRequests = "getRequests";
     private final String retrieveFriends = "getFriends";
 
+    private final int ONE_MEGABYTE = 1024 * 1024;
+
     private static String HOST;
     private static String PROFILE_DIR;
     private static String REQUEST_DIR;
@@ -53,6 +64,7 @@ public class DisplayProfileFragment extends Fragment
     private int senderId;
     private int receiverId;
 
+    private ImageView mProfilePic;
     private TextView nameTV;
     private TextView sexTV;
     private TextView yearOfStudiesTV;
@@ -289,6 +301,29 @@ public class DisplayProfileFragment extends Fragment
                 courseTV.setText(courseStr);
                 modulesTV.setText(moduleStr);
                 descriptionTV.setText(description);
+
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReference();
+
+                storageRef.child("images/" + receiverId).getBytes(ONE_MEGABYTE)
+                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+                                // Use the bytes to display the image
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                                mProfilePic = (ImageView) getActivity()
+                                        .findViewById(R.id.profilePic);
+                                Bitmap imageRounded = MainActivity.imageRounded(bitmap);
+                                mProfilePic.setImageBitmap(imageRounded);
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                    }
+                });
 
             } else if (REQ_TYPE.equals(sendRequest)) {
                 String status = jsonObject.getString("Status");

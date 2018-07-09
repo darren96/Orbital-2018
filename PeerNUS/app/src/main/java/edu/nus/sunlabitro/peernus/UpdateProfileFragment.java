@@ -1,9 +1,20 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,15 +34,28 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -61,6 +85,7 @@ public class UpdateProfileFragment extends Fragment
     private static String registerProfile = "104";
     private static String updateProfile = "105";
 
+    private static final int PICK_IMAGE = 1;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -95,6 +120,7 @@ public class UpdateProfileFragment extends Fragment
     private String sex;
     private int matricYear;
     private String description;
+    private Uri profilePicUri = null;
 
     private boolean isInitialAddCourse = true;
     private boolean isInitialAddModule = true;
@@ -171,6 +197,23 @@ public class UpdateProfileFragment extends Fragment
 
         retrieveProfile();
 
+        mProfilePic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent getIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                getIntent.setType("image/*");
+
+                Intent pickIntent = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                pickIntent.setType("image/*");
+
+                Intent chooserIntent = Intent.createChooser(getIntent, "Select Image");
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] {pickIntent});
+
+                startActivityForResult(chooserIntent, PICK_IMAGE);
+            }
+        });
+
         mAddCourseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -246,8 +289,9 @@ public class UpdateProfileFragment extends Fragment
     }
 
     private void retrieveProfile() {
+
         SharedPreferences sharedPreferences = getActivity()
-                .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+                .getSharedPreferences(USER_PREF, MODE_PRIVATE);
         id = sharedPreferences.getInt("id", 0);
 
         name = sharedPreferences.getString("name", "");
@@ -279,23 +323,36 @@ public class UpdateProfileFragment extends Fragment
         description = sharedPreferences.getString("description", "");
 
         mName.setText(name);
-        if (sex.equals("male")) {
+
+        if (sex.equals("Male")) {
             mSex.check(R.id.male);
         } else {
             mSex.check(R.id.female);
         }
+
         mYearofStudies.setText(String.valueOf(matricYear));
         mCourseList.setText(course);
         mModuleList.setText(modules);
         mDescription.setText(description);
+
+        String bytesArray = sharedPreferences.getString("profilePic", null);
+
+        if (bytesArray != null) {
+            String[] split = bytesArray.substring(1, bytesArray.length()-1).split(", ");
+            byte[] bytes = new byte[split.length];
+            for (int i = 0; i < split.length; i++) {
+                bytes[i] = Byte.parseByte(split[i]);
+            }
+            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            Bitmap imageRounded = MainActivity.imageRounded(bitmap);
+            mProfilePic.setImageBitmap(imageRounded);
+        }
 
     }
 
     private void addCourse() {
         String tmp = mCourse.getSelectedItem().toString();
         int id;
-        String courseName;
-        String faculty;
 
         String mCourseListStr = mCourseList.getText().toString();
 
@@ -377,6 +434,20 @@ public class UpdateProfileFragment extends Fragment
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode == PICK_IMAGE) {
+            //TODO: action
+            if (data != null) {
+                profilePicUri = data.getData();
+                mProfilePic.setImageURI(data.getData());
+                Bitmap bitmap = ((BitmapDrawable) mProfilePic.getDrawable()).getBitmap();
+                mProfilePic.setImageBitmap(MainActivity.imageRounded(bitmap));
+            }
+        }
+    }
+
+    @Override
     public void onTaskCompleted(String response, String REQ_TYPE) {
         retrieveFromJSON(response, REQ_TYPE);
 
@@ -411,6 +482,10 @@ public class UpdateProfileFragment extends Fragment
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+            }
+        } else if (REQ_TYPE.equals(registerProfile) || REQ_TYPE.equals(updateProfile)) {
+            if (profilePicUri != null) {
+                uploadImage();
             }
         }
 
@@ -495,6 +570,63 @@ public class UpdateProfileFragment extends Fragment
 
     }
 
+    private void uploadImage() {
+        // Create the file metadata
+        StorageMetadata metadata = new StorageMetadata.Builder()
+                .setContentType("image/png")
+                .build();
+
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+
+        StorageReference storageRef = storage.getReference();
+
+        // Upload file and metadata to the path 'images/mountains.jpg'
+        UploadTask uploadTask = storageRef.child("images/" + id)
+                .putFile(profilePicUri, metadata);
+
+        // Listen for state changes, errors, and completion of the upload.
+        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                System.out.println("Upload is " + progress + "% done");
+            }
+        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("Upload is paused");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // Handle successful uploads on complete
+                // ...
+                Bitmap bitmap = ((BitmapDrawable) mProfilePic.getDrawable()).getBitmap();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] bytes = stream.toByteArray();
+                SharedPreferences sharedPreferences = getActivity()
+                        .getSharedPreferences(USER_PREF, MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("profilePic", Arrays.toString(bytes));
+                editor.commit();
+
+                NavigationView navigationView = (NavigationView) getActivity()
+                        .findViewById(R.id.nav_view);
+                View headerView = navigationView.getHeaderView(0);
+                ImageView headerProfilePic = (ImageView) headerView.findViewById(R.id.profilePic);
+                Bitmap roundedImage = MainActivity.imageRounded(bitmap);
+
+                headerProfilePic.setImageBitmap(roundedImage);
+            }
+        });
+    }
+
     // Convert profile information to JSON string
     public String convertToJSON(String REQ_TYPE) {
         JSONStringer jsonText = new JSONStringer();
@@ -526,6 +658,12 @@ public class UpdateProfileFragment extends Fragment
                 jsonText.endArray();
                 jsonText.key("description");
                 jsonText.value(description);
+                jsonText.key("profilePic");
+                if (mProfilePic.getDrawable().equals(R.drawable.profile)) {
+                    jsonText.value(0);
+                } else {
+                    jsonText.value(id);
+                }
             }
             jsonText.endObject();
 
@@ -552,6 +690,8 @@ public class UpdateProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(),"Profile updated successfully!", Toast.LENGTH_SHORT).show();
 
+                    id = jsonObject.getInt("id");
+
                     JSONArray courseJsonArray = jsonObject.getJSONArray("course");
                     HashSet<String> selectedCourseSet = new HashSet<>();
                     for (int i = 0; i < courseJsonArray.length(); i++) {
@@ -561,7 +701,7 @@ public class UpdateProfileFragment extends Fragment
                     JSONArray courseIdJsonArray = jsonObject.getJSONArray("courseId");
                     HashSet<String> selectedCourseIdSet = new HashSet<>();
                     for (int i = 0; i < courseIdJsonArray.length(); i++) {
-                        selectedCourseSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
+                        selectedCourseIdSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
                     }
 
                     JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
@@ -571,7 +711,7 @@ public class UpdateProfileFragment extends Fragment
                     }
 
                     SharedPreferences.Editor editor = getActivity().
-                            getSharedPreferences(USER_PREF, Context.MODE_PRIVATE).edit();
+                            getSharedPreferences(USER_PREF, MODE_PRIVATE).edit();
                     editor.putInt("id", id);
                     editor.putString("name", name);
                     editor.putString("sex", sex);
