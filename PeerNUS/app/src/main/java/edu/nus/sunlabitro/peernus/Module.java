@@ -7,6 +7,10 @@ public class Module {
     private String moduleTitle;
     private int[] semesters;
 
+    public Module() {
+
+    }
+
     public Module(int id, String moduleCode, String moduleTitle) {
         this.id = id;
         this.moduleCode = moduleCode;

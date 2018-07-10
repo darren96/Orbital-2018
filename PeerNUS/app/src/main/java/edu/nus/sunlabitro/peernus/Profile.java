@@ -10,6 +10,10 @@ public class Profile {
     private ArrayList<String> course;
     private int profilePic;
 
+    public Profile() {
+
+    }
+
     public Profile(int id, String name, String nusnet, int matricYear, ArrayList<String> course, int profilePic) {
         this.id = id;
         this.name = name;

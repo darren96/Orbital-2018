@@ -234,18 +234,13 @@ public class ProfilesListFragment extends Fragment
 
             jsonText.object();
             if (REQ_TYPE.equals(getMatches)) {
-                jsonText.key("course");
-                Set<String> course = getActivity()
+                jsonText.key("id");
+
+                int id = getActivity()
                         .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE)
-                        .getStringSet("course", null);
-                jsonText.array();
-                Iterator<String> courseIterator = course.iterator();
-                while (courseIterator.hasNext()) {
-                    courseStr = courseIterator.next();
-                    jsonText.value(courseStr);
-                    Log.d("getMatches", courseStr);
-                }
-                jsonText.endArray();
+                        .getInt("id", 0);
+
+                jsonText.value(id);
             } else if (REQ_TYPE.equals(retrieveRequests)) {
                 jsonText.key("receiverId");
                 jsonText.value(id);

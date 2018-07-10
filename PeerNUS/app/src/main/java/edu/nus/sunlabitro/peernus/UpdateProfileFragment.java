@@ -389,23 +389,26 @@ public class UpdateProfileFragment extends Fragment
     private void addModule() {
         String modCode = mModule.getText().toString().toUpperCase();
 
-        String mModuleListStr = mModuleList.getText().toString();
+        if (modCode.equals("") || modCode == null) {
 
-        if (isInitialAddModule) {
-            selectedModuleList = new ArrayList<>();
-            mModuleListStr = "";
-            isInitialAddModule = false;
-        }
+            String mModuleListStr = mModuleList.getText().toString();
 
-        if (!selectedModuleList.contains(modCode)) {
-            mModuleList.setText(mModuleListStr + modCode + "\n");
-        }
-        else {
-            Toast.makeText(getActivity(),"You have already added the module!", Toast.LENGTH_LONG).show();
-        }
+            if (isInitialAddModule) {
+                selectedModuleList = new ArrayList<>();
+                mModuleListStr = "";
+                isInitialAddModule = false;
+            }
 
-        selectedModuleList.add(modCode);
-        mModule.setText("");
+            if (!selectedModuleList.contains(modCode)) {
+                mModuleList.setText(mModuleListStr + modCode + "\n");
+            } else {
+                Toast.makeText(getActivity(), "You have already added the module!", Toast.LENGTH_LONG).show();
+            }
+
+            selectedModuleList.add(modCode);
+            mModule.setText("");
+
+        }
 
     }
 
