@@ -39,7 +39,9 @@
             android:id="@+id/messageEditText"
             android:layout_gravity="center_vertical"
             android:background="@color/colorAccent"
-            android:hint="Type Your Message Here..."
+            android:fontFamily="@font/montserrat_regular"
+            android:textSize="18dp"
+            android:hint="Enter Your Message Here..."
             android:layout_weight="1"/>
 
         <Button
@@ -48,6 +50,8 @@
             android:text="SEND"
             android:enabled="false"
             android:id="@+id/sendButton"
+            android:fontFamily="@font/montserrat_regular"
+            android:textSize="14dp"
             android:layout_gravity="bottom"/>
 
     </LinearLayout>

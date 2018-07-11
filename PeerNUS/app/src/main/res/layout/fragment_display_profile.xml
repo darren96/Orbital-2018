@@ -52,7 +52,7 @@
                     android:fontFamily="@font/montserrat_regular"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:text="John Doe"/>
+                    android:text=""/>
 
             </TableRow>
 
@@ -73,7 +73,7 @@
                     android:fontFamily="@font/montserrat_regular"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:text="Male" />
+                    android:text="" />
 
             </TableRow>
 
@@ -94,7 +94,7 @@
                     android:fontFamily="@font/montserrat_regular"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:text="1, 2, 3, 4 or 5" />
+                    android:text="" />
 
             </TableRow>
 
@@ -118,7 +118,7 @@
                         android:fontFamily="@font/montserrat_regular"
                         android:textColor="#000000"
                         android:textSize="18sp"
-                        android:text="Computer Science"/>
+                        android:text=""/>
 
                 </LinearLayout>
 
@@ -144,7 +144,7 @@
                         android:fontFamily="@font/montserrat_regular"
                         android:textColor="#000000"
                         android:textSize="18sp"
-                        android:text="CS1231\nCS2100\nGER1000\nIS1103\nMA1521"/>
+                        android:text=""/>
 
                 </LinearLayout>
 
@@ -167,7 +167,7 @@
                     android:fontFamily="@font/montserrat_regular"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:text="A brief description"/>
+                    android:text=""/>
 
             </TableRow>
 

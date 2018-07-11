@@ -31,7 +31,6 @@ import android.widget.TextView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -39,8 +38,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -96,30 +93,35 @@ public class MainActivity extends AppCompatActivity
 
         isRegistered = getIntent().getExtras().getBoolean("isRegistered");
 
-        retrieveProfile();
-
-        SharedPreferences sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
-        email = sharedPreferences.getString("email", "");
-        String name = sharedPreferences.getString("name", "");
-
-        mName.setText(name);
-        mEmail.setText(email);
+        Log.d("isRegistered", String.valueOf(isRegistered));
 
         if (!isRegistered) {
-            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-
             Fragment fragment = new UpdateProfileFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("isRegistered", isRegistered);
+
+            fragment.setArguments(bundle);
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
             transaction.replace(R.id.fragment_frame, fragment);
             transaction.addToBackStack(null);
 
-            drawer.setVisibility(View.INVISIBLE);
-
             // Commit the transaction
             transaction.commit();
+        } else {
+
+            retrieveProfile();
+
+            SharedPreferences sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+            email = sharedPreferences.getString("email", "");
+            String name = sharedPreferences.getString("name", "");
+
+            mName.setText(name);
+            mEmail.setText(email);
+
         }
     }
 
@@ -184,6 +186,11 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_profile) {
             Fragment fragment = new UpdateProfileFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("isRegistered", isRegistered);
+
+            fragment.setArguments(bundle);
 
             // Replace whatever is in the fragment_container view with this fragment,
             // and add the transaction to the back stack
@@ -299,6 +306,7 @@ public class MainActivity extends AppCompatActivity
                 String name = jsonObject.getString("name");
                 String sex = jsonObject.getString("sex");
                 int matricYear = Integer.parseInt(jsonObject.getString("matricYear"));
+
                 JSONArray courseJsonArray = jsonObject.getJSONArray("course");
                 HashSet<String> selectedCourseSet = new HashSet<>();
                 for (int i = 0; i < courseJsonArray.length(); i++) {
@@ -330,6 +338,7 @@ public class MainActivity extends AppCompatActivity
                 editor.putStringSet("modules", selectedModuleSet);
                 editor.putString("description", description);
                 editor.apply();
+                editor.commit();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -339,7 +348,7 @@ public class MainActivity extends AppCompatActivity
     private void generateUI() {
         if(isRegistered) {
 
-            FirebaseStorage storage = FirebaseStorage.getInstance();
+            final FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReference();
 
             storageRef.child("images/" + id).getBytes(ONE_MEGABYTE)

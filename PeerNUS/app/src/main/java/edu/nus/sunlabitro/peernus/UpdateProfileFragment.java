@@ -5,11 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -70,7 +65,7 @@ public class UpdateProfileFragment extends Fragment
         implements OnTaskCompleted {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM1 = "isRegistered";
     private static final String ARG_PARAM2 = "param2";
 
     private static String HOST;
@@ -88,7 +83,7 @@ public class UpdateProfileFragment extends Fragment
     private static final int PICK_IMAGE = 1;
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private boolean isRegistered;
     private String mParam2;
 
     private EditText mName;
@@ -107,6 +102,7 @@ public class UpdateProfileFragment extends Fragment
     private Button mAddModuleBtn;
     private Button mSaveProfileBtn;
 
+    private SharedPreferences sharedPreferences;
     private static ArrayList<String> course;
     private static ArrayList<Module> module;
     private ArrayList<Integer> selectedCourseList;
@@ -154,7 +150,7 @@ public class UpdateProfileFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            isRegistered = getArguments().getBoolean(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
@@ -167,6 +163,10 @@ public class UpdateProfileFragment extends Fragment
 
         selectedCourseList = new ArrayList<>();
         selectedModuleList = new ArrayList<>();
+
+        sharedPreferences = getActivity()
+                .getSharedPreferences(USER_PREF, MODE_PRIVATE);
+        nusnet = sharedPreferences.getString("email", "");
 
         getAllCourses();
         getAllModules();
@@ -195,7 +195,10 @@ public class UpdateProfileFragment extends Fragment
         mAddModuleBtn = (Button) view.findViewById(R.id.btnAddModule);
         mSaveProfileBtn = (Button) view.findViewById(R.id.btnSaveProfile);
 
-        retrieveProfile();
+        Log.d("isRegistered in Update", String.valueOf(isRegistered));
+        if (isRegistered) {
+            retrieveProfile();
+        }
 
         mProfilePic.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -290,10 +293,7 @@ public class UpdateProfileFragment extends Fragment
 
     private void retrieveProfile() {
 
-        SharedPreferences sharedPreferences = getActivity()
-                .getSharedPreferences(USER_PREF, MODE_PRIVATE);
         id = sharedPreferences.getInt("id", 0);
-
         name = sharedPreferences.getString("name", "");
         sex = sharedPreferences.getString("sex", "");
         matricYear = sharedPreferences.getInt("matricYear", 0);
@@ -389,7 +389,7 @@ public class UpdateProfileFragment extends Fragment
     private void addModule() {
         String modCode = mModule.getText().toString().toUpperCase();
 
-        if (modCode.equals("") || modCode == null) {
+        if (!modCode.equals("") || modCode != null) {
 
             String mModuleListStr = mModuleList.getText().toString();
 

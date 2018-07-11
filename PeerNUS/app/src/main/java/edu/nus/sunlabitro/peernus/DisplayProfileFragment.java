@@ -1,6 +1,7 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -59,6 +60,7 @@ public class DisplayProfileFragment extends Fragment
     private static String REQUEST_DIR;
     private static String USER_PREF;
 
+    private SharedPreferences sharedPreferences;
     private String nusnet;
     private String purpose;
     private int senderId;
@@ -113,6 +115,9 @@ public class DisplayProfileFragment extends Fragment
         REQUEST_DIR = getString(R.string.REQUEST_DIR);
         USER_PREF = getString(R.string.USER_PREF);
 
+        sharedPreferences = getActivity()
+                .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+
     }
 
     @Override
@@ -158,6 +163,12 @@ public class DisplayProfileFragment extends Fragment
             btnAcceptRequest.setVisibility(View.VISIBLE);
             btnCancelRequest.setVisibility(View.VISIBLE);
         } else if (purpose.equals(retrieveFriends)) {
+            btnSendMessage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sendMessage();
+                }
+            });
             btnSendMessage.setVisibility(View.VISIBLE);
         }
 
@@ -214,8 +225,6 @@ public class DisplayProfileFragment extends Fragment
     }
 
     private void sendRequest() {
-        SharedPreferences sharedPreferences = getActivity()
-                .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
         senderId = sharedPreferences.getInt("id", 0);
         String REQ_TYPE = sendRequest;
         String jsonString = convertToJSON(REQ_TYPE);
@@ -226,6 +235,7 @@ public class DisplayProfileFragment extends Fragment
 
     private void acceptRequest() {
         String REQ_TYPE = acceptRequest;
+        receiverId = sharedPreferences.getInt("id", 0);
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/acceptRequest.php", jsonString, "POST",
@@ -238,6 +248,20 @@ public class DisplayProfileFragment extends Fragment
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/cancelRequest.php", jsonString, "POST",
                 REQ_TYPE);
+    }
+
+    private void sendMessage() {
+        senderId = sharedPreferences.getInt("id", 0);
+
+        Intent intent = new Intent(getActivity(), ChatActivity.class);
+
+        Bundle bundle = new Bundle();
+        bundle.putString("receiverName", nameTV.getText().toString());
+
+        intent.putExtras(bundle);
+
+        startActivity(intent);
+
     }
 
     @Override
@@ -275,7 +299,7 @@ public class DisplayProfileFragment extends Fragment
             JSONObject jsonObject = new JSONObject(message);
 
             if (REQ_TYPE.equals(retrieveProfile)) {
-                receiverId = jsonObject.getInt("id");
+                senderId = jsonObject.getInt("id");
 
                 String name = jsonObject.getString("name");
                 String sex = jsonObject.getString("sex");
@@ -305,7 +329,7 @@ public class DisplayProfileFragment extends Fragment
                 FirebaseStorage storage = FirebaseStorage.getInstance();
                 StorageReference storageRef = storage.getReference();
 
-                storageRef.child("images/" + receiverId).getBytes(ONE_MEGABYTE)
+                storageRef.child("images/" + senderId).getBytes(ONE_MEGABYTE)
                         .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                             @Override
                             public void onSuccess(byte[] bytes) {
