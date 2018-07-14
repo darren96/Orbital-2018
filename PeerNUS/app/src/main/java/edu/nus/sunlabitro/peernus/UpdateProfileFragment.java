@@ -239,9 +239,8 @@ public class UpdateProfileFragment extends Fragment
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String query = mModule.getText().toString();
                 ModuleListAdapter moduleListAdapter =
-                        new ModuleListAdapter(getActivity(), generateData(query));
+                        new ModuleListAdapter(getActivity(), generateData(s.toString()));
                 mModuleListView.setAdapter(moduleListAdapter);
                 mModuleListView.setVisibility(View.VISIBLE);
             }
