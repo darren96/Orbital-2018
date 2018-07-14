@@ -1,6 +1,8 @@
 package edu.nus.sunlabitro.peernus;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -59,6 +62,8 @@ public class ChatActivity extends AppCompatActivity {
     private String USER_PREF;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
 
+    private ImageView mProfilePicImageView;
+    private TextView mFriendNameTextView;
     private RecyclerView mChatList;
     private ImageView mUploadImageView;
     private EditText mMessageEditText;
@@ -67,6 +72,8 @@ public class ChatActivity extends AppCompatActivity {
     private String chatroomId;
     private String username;
     private String receiverName;
+    private String email;
+    private String bitmapStr;
 
     private ArrayList<Message> messages;
 
@@ -99,7 +106,10 @@ public class ChatActivity extends AppCompatActivity {
 
         username = getSharedPreferences(USER_PREF, MODE_PRIVATE)
                 .getString("name", "");
-        receiverName = getIntent().getExtras().getString("receiverName");
+        Bundle bundle = getIntent().getExtras();
+        receiverName = bundle.getString("receiverName");
+        email = bundle.getString("email");
+        bitmapStr = bundle.getString("profilePic");
 
         if (username.compareTo(receiverName) < 0) {
             chatroomId = username + "_" + receiverName;
@@ -114,7 +124,16 @@ public class ChatActivity extends AppCompatActivity {
 
         messages = new ArrayList<>();
 
-        mMessageEditText = findViewById(R.id.messageEditText);
+        mProfilePicImageView = (ImageView) findViewById(R.id.profilePic);
+        mFriendNameTextView = (TextView) findViewById(R.id.friendName);
+
+        if (bitmapStr != null) {
+            mProfilePicImageView.setImageBitmap(stringToBitMap(bitmapStr));
+        }
+
+        mFriendNameTextView.setText(receiverName);
+
+        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
 
         mSendMsgBtn = findViewById(R.id.sendButton);
         mSendMsgBtn.setOnClickListener(new View.OnClickListener() {
@@ -368,5 +387,16 @@ public class ChatActivity extends AppCompatActivity {
     protected void onResume() {
         mFirebaseAdapter.startListening();
         super.onResume();
+    }
+
+    public Bitmap stringToBitMap(String encodedString){
+        try {
+            byte [] encodeByte = Base64.decode(encodedString,Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+            return bitmap;
+        } catch(Exception e) {
+            e.getMessage();
+            return null;
+        }
     }
 }

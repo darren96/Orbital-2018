@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,8 @@ import com.google.firebase.storage.StorageReference;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONStringer;
+
+import java.io.ByteArrayOutputStream;
 
 
 /**
@@ -63,6 +66,7 @@ public class DisplayProfileFragment extends Fragment
     private SharedPreferences sharedPreferences;
     private String nusnet;
     private String purpose;
+    private Bitmap bitmap;
     private int senderId;
     private int receiverId;
 
@@ -257,6 +261,13 @@ public class DisplayProfileFragment extends Fragment
 
         Bundle bundle = new Bundle();
         bundle.putString("receiverName", nameTV.getText().toString());
+        bundle.putString("email", nusnet);
+
+        if (bitmap != null) {
+            bundle.putString("profilePic", bitMapToString(bitmap));
+        } else {
+            bundle.putString("profilePic", null);
+        }
 
         intent.putExtras(bundle);
 
@@ -318,6 +329,7 @@ public class DisplayProfileFragment extends Fragment
                 }
 
                 String description = jsonObject.getString("description");
+                int profilePic = jsonObject.getInt("profilePic");
 
                 nameTV.setText(name);
                 sexTV.setText(sex);
@@ -326,28 +338,30 @@ public class DisplayProfileFragment extends Fragment
                 modulesTV.setText(moduleStr);
                 descriptionTV.setText(description);
 
-                FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference storageRef = storage.getReference();
+                if (profilePic != 0) {
+                    FirebaseStorage storage = FirebaseStorage.getInstance();
+                    StorageReference storageRef = storage.getReference();
 
-                storageRef.child("images/" + senderId).getBytes(ONE_MEGABYTE)
-                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                            @Override
-                            public void onSuccess(byte[] bytes) {
-                                // Use the bytes to display the image
-                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    storageRef.child("images/" + senderId).getBytes(ONE_MEGABYTE)
+                            .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                                @Override
+                                public void onSuccess(byte[] bytes) {
+                                    // Use the bytes to display the image
+                                    bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
-                                mProfilePic = (ImageView) getActivity()
-                                        .findViewById(R.id.profilePic);
-                                Bitmap imageRounded = MainActivity.imageRounded(bitmap);
-                                mProfilePic.setImageBitmap(imageRounded);
+                                    mProfilePic = (ImageView) getActivity()
+                                            .findViewById(R.id.profilePic);
+                                    Bitmap imageRounded = MainActivity.imageRounded(bitmap);
+                                    mProfilePic.setImageBitmap(imageRounded);
 
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle any errors
-                    }
-                });
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                        }
+                    });
+                }
 
             } else if (REQ_TYPE.equals(sendRequest)) {
                 String status = jsonObject.getString("Status");
@@ -381,6 +395,14 @@ public class DisplayProfileFragment extends Fragment
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String bitMapToString(Bitmap bitmap){
+        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
+        byte [] b = baos.toByteArray();
+        String temp = Base64.encodeToString(b, Base64.DEFAULT);
+        return temp;
     }
 
 }
