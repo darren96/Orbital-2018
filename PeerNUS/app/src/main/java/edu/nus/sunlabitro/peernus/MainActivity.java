@@ -59,9 +59,11 @@ public class MainActivity extends AppCompatActivity
     private TextView mEmail;
     private ImageView mProfilePic;
 
+    private SharedPreferences sharedPreferences;
     private boolean isRegistered;
     private int id;
     private String email;
+    private String name;
 
     final long ONE_MEGABYTE = 1024 * 1024;
 
@@ -91,15 +93,18 @@ public class MainActivity extends AppCompatActivity
         mName = (TextView) headerView.findViewById(R.id.userName);
         mProfilePic = (ImageView) headerView.findViewById(R.id.profilePic);
 
-        isRegistered = getIntent().getExtras().getBoolean("isRegistered");
+        Bundle bundle = getIntent().getExtras();
 
-        Log.d("isRegistered", String.valueOf(isRegistered));
+        if (bundle != null) {
+            isRegistered = bundle.getBoolean("isRegistered");
+        }
+
+        sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
 
         if (!isRegistered) {
             Fragment fragment = new UpdateProfileFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-            Bundle bundle = new Bundle();
             bundle.putBoolean("isRegistered", isRegistered);
 
             fragment.setArguments(bundle);
@@ -115,9 +120,8 @@ public class MainActivity extends AppCompatActivity
 
             retrieveProfile();
 
-            SharedPreferences sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
             email = sharedPreferences.getString("email", "");
-            String name = sharedPreferences.getString("name", "");
+            name = sharedPreferences.getString("name", "");
 
             mName.setText(name);
             mEmail.setText(email);
@@ -303,7 +307,7 @@ public class MainActivity extends AppCompatActivity
                 JSONObject jsonObject = new JSONObject(message);
                 id = jsonObject.getInt("id");
 
-                String name = jsonObject.getString("name");
+                name = jsonObject.getString("name");
                 String sex = jsonObject.getString("sex");
                 int matricYear = Integer.parseInt(jsonObject.getString("matricYear"));
 
@@ -326,9 +330,10 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 String description = jsonObject.getString("description");
+                int isProfilePicSet = jsonObject.getInt("profilePic");
 
                 SharedPreferences.Editor editor =
-                        getSharedPreferences(USER_PREF, Context.MODE_PRIVATE).edit();
+                        sharedPreferences.edit();
                 editor.putInt("id", id);
                 editor.putString("name", name);
                 editor.putString("sex", sex);
@@ -337,6 +342,7 @@ public class MainActivity extends AppCompatActivity
                 editor.putStringSet("courseId", selectedCourseIdSet);
                 editor.putStringSet("modules", selectedModuleSet);
                 editor.putString("description", description);
+                editor.putInt("isProfilePicSet", isProfilePicSet);
                 editor.apply();
                 editor.commit();
             }
@@ -348,32 +354,35 @@ public class MainActivity extends AppCompatActivity
     private void generateUI() {
         if(isRegistered) {
 
-            final FirebaseStorage storage = FirebaseStorage.getInstance();
-            StorageReference storageRef = storage.getReference();
+            if (sharedPreferences.getInt("isProfilePicSet", 0) > 0) {
 
-            storageRef.child("images/" + id).getBytes(ONE_MEGABYTE)
-                    .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                        @Override
-                        public void onSuccess(byte[] bytes) {
-                            // Use the bytes to display the image
-                            SharedPreferences sharedPreferences =
-                                    getSharedPreferences(USER_PREF, MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("profilePic", Arrays.toString(bytes));
-                            editor.commit();
+                final FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReference();
 
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                storageRef.child("images/" + id).getBytes(ONE_MEGABYTE)
+                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+                                // Use the bytes to display the image
+                                SharedPreferences sharedPreferences =
+                                        getSharedPreferences(USER_PREF, MODE_PRIVATE);
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("profilePic", Arrays.toString(bytes));
+                                editor.commit();
 
-                            Bitmap imageRounded = imageRounded(bitmap);
-                            mProfilePic.setImageBitmap(imageRounded);
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
-                }
-            });
+                                Bitmap imageRounded = imageRounded(bitmap);
+                                mProfilePic.setImageBitmap(imageRounded);
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                    }
+                });
+            }
 
             Fragment fragment = new ProfilesListFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

@@ -5,11 +5,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -263,14 +269,15 @@ public class DisplayProfileFragment extends Fragment
         bundle.putString("receiverName", nameTV.getText().toString());
         bundle.putString("email", nusnet);
 
-        if (bitmap != null) {
-            bundle.putString("profilePic", bitMapToString(bitmap));
+        byte[] bytes = bitMapToByteArray(bitmap);
+
+        if (bytes.length > 0) {
+            bundle.putByteArray("profilePic", bytes);
         } else {
-            bundle.putString("profilePic", null);
+            bundle.putByteArray("profilePic", null);
         }
 
         intent.putExtras(bundle);
-
         startActivity(intent);
 
     }
@@ -351,8 +358,8 @@ public class DisplayProfileFragment extends Fragment
 
                                     mProfilePic = (ImageView) getActivity()
                                             .findViewById(R.id.profilePic);
-                                    Bitmap imageRounded = MainActivity.imageRounded(bitmap);
-                                    mProfilePic.setImageBitmap(imageRounded);
+                                    bitmap = imageRounded(bitmap);
+                                    mProfilePic.setImageBitmap(bitmap);
 
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
@@ -397,12 +404,23 @@ public class DisplayProfileFragment extends Fragment
         }
     }
 
-    public String bitMapToString(Bitmap bitmap){
-        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
-        byte [] b = baos.toByteArray();
-        String temp = Base64.encodeToString(b, Base64.DEFAULT);
-        return temp;
+    public byte[] bitMapToByteArray(Bitmap bitmap){
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, bs);
+        return bs.toByteArray();
+    }
+
+    public static Bitmap imageRounded(Bitmap bitmap) {
+        Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
+                bitmap.getHeight(), bitmap.getConfig());
+        Canvas canvas = new Canvas(imageRounded);
+        Paint mpaint = new Paint();
+        mpaint.setAntiAlias(true);
+        mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP));
+        canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
+                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+        return imageRounded;
     }
 
 }

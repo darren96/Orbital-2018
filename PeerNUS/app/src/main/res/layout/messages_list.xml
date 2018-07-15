@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/montserrat_regular"
         android:textSize="18dp"
-        android:text="message"/>
+        android:text=""/>
 
     <ImageView
         android:id="@+id/imageMessage"
@@ -26,6 +26,6 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/montserrat_regular"
         android:textSize="14dp"
-        android:text="2018-07-11 15:46"/>
+        android:text=""/>
 
 </LinearLayout>

@@ -1,11 +1,21 @@
 package edu.nus.sunlabitro.peernus;
 
+import android.app.ActivityManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -22,7 +32,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -38,7 +47,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -73,7 +82,7 @@ public class ChatActivity extends AppCompatActivity {
     private String username;
     private String receiverName;
     private String email;
-    private String bitmapStr;
+    private byte[] bytes;
 
     private ArrayList<Message> messages;
 
@@ -109,7 +118,7 @@ public class ChatActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         receiverName = bundle.getString("receiverName");
         email = bundle.getString("email");
-        bitmapStr = bundle.getString("profilePic");
+        bytes = bundle.getByteArray("profilePic");
 
         if (username.compareTo(receiverName) < 0) {
             chatroomId = username + "_" + receiverName;
@@ -127,8 +136,9 @@ public class ChatActivity extends AppCompatActivity {
         mProfilePicImageView = (ImageView) findViewById(R.id.profilePic);
         mFriendNameTextView = (TextView) findViewById(R.id.friendName);
 
-        if (bitmapStr != null) {
-            mProfilePicImageView.setImageBitmap(stringToBitMap(bitmapStr));
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        if (bytes != null) {
+            mProfilePicImageView.setImageBitmap(bitmap);
         }
 
         mFriendNameTextView.setText(receiverName);
@@ -281,6 +291,33 @@ public class ChatActivity extends AppCompatActivity {
         mChatList.setLayoutManager(mLinearLayoutManager);
         mChatList.setAdapter(mFirebaseAdapter);
 
+        mFirebaseDatabaseReference.child(chatroomId).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                sendNotification(dataSnapshot.getValue(Message.class).getText());
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
     }
 
     private void sendMessage() {
@@ -389,14 +426,53 @@ public class ChatActivity extends AppCompatActivity {
         super.onResume();
     }
 
-    public Bitmap stringToBitMap(String encodedString){
-        try {
-            byte [] encodeByte = Base64.decode(encodedString,Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-            return bitmap;
-        } catch(Exception e) {
-            e.getMessage();
-            return null;
+    private void sendNotification(String messageBody) {
+
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
+
+        if (!cn.getClassName().equals(ChatActivity.class.getName())) {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("receiverName", receiverName);
+            bundle.putString("email", email);
+
+            if (bytes.length > 0) {
+                bundle.putByteArray("profilePic", bytes);
+            } else {
+                bundle.putByteArray("profilePic", null);
+            }
+
+            intent.putExtras(bundle);
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                    PendingIntent.FLAG_ONE_SHOT);
+
+
+            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this, chatroomId)
+                            .setSmallIcon(R.drawable.ic_peernus_logo_round)
+                            .setContentTitle(receiverName)
+                            .setContentText(messageBody)
+                            .setAutoCancel(true)
+                            .setSound(defaultSoundUri)
+                            .setContentIntent(pendingIntent);
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            // Since android Oreo notification channel is needed.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(chatroomId,
+                        "Channel human readable title",
+                        NotificationManager.IMPORTANCE_DEFAULT);
+                notificationManager.createNotificationChannel(channel);
+            }
+
+            notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
         }
     }
 }
