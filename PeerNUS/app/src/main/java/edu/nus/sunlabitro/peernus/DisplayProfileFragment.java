@@ -73,6 +73,7 @@ public class DisplayProfileFragment extends Fragment
     private String nusnet;
     private String purpose;
     private Bitmap bitmap;
+    private int userId;
     private int senderId;
     private int receiverId;
 
@@ -236,6 +237,7 @@ public class DisplayProfileFragment extends Fragment
 
     private void sendRequest() {
         senderId = sharedPreferences.getInt("id", 0);
+        receiverId = userId;
         String REQ_TYPE = sendRequest;
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
@@ -245,6 +247,7 @@ public class DisplayProfileFragment extends Fragment
 
     private void acceptRequest() {
         String REQ_TYPE = acceptRequest;
+        senderId = userId;
         receiverId = sharedPreferences.getInt("id", 0);
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
@@ -262,7 +265,7 @@ public class DisplayProfileFragment extends Fragment
 
     private void sendMessage() {
         senderId = sharedPreferences.getInt("id", 0);
-
+        receiverId = userId;
         Intent intent = new Intent(getActivity(), ChatActivity.class);
 
         Bundle bundle = new Bundle();
@@ -317,7 +320,7 @@ public class DisplayProfileFragment extends Fragment
             JSONObject jsonObject = new JSONObject(message);
 
             if (REQ_TYPE.equals(retrieveProfile)) {
-                senderId = jsonObject.getInt("id");
+                userId = jsonObject.getInt("id");
 
                 String name = jsonObject.getString("name");
                 String sex = jsonObject.getString("sex");
