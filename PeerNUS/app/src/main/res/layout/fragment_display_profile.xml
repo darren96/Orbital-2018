@@ -232,6 +232,19 @@
                 android:visibility="gone"
                 android:text="Send Message" />
 
+            <Button
+                android:id="@+id/btnUnFriend"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginTop="15dp"
+                android:background="@color/colorPrimary"
+                android:fontFamily="@font/montserrat_bold"
+                android:paddingHorizontal="10dp"
+                android:textColor="@color/colorAccent"
+                android:visibility="gone"
+                android:text="Unfriend" />
+
         </TableLayout>
 
     </ScrollView>

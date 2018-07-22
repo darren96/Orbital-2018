@@ -57,6 +57,7 @@ public class DisplayProfileFragment extends Fragment
     private final String acceptRequest = "303";
     private final String cancelRequest = "304";
     private final String sendMessage = "305";
+    private final String unFriend = "306";
 
     private final String getMatches = "getMatches";
     private final String retrieveRequests = "getRequests";
@@ -67,6 +68,7 @@ public class DisplayProfileFragment extends Fragment
     private static String HOST;
     private static String PROFILE_DIR;
     private static String REQUEST_DIR;
+    private static String FRIEND_DIR;
     private static String USER_PREF;
 
     private SharedPreferences sharedPreferences;
@@ -88,6 +90,7 @@ public class DisplayProfileFragment extends Fragment
     private Button btnAcceptRequest;
     private Button btnCancelRequest;
     private Button btnSendMessage;
+    private Button btnUnFriend;
 
     private OnFragmentInteractionListener mListener;
 
@@ -124,6 +127,7 @@ public class DisplayProfileFragment extends Fragment
         HOST = getString(R.string.HOST);
         PROFILE_DIR = getString(R.string.PROFILE_DIR);
         REQUEST_DIR = getString(R.string.REQUEST_DIR);
+        FRIEND_DIR = getString(R.string.FRIENDS_DIR);
         USER_PREF = getString(R.string.USER_PREF);
 
         sharedPreferences = getActivity()
@@ -147,6 +151,7 @@ public class DisplayProfileFragment extends Fragment
         btnAcceptRequest = (Button) view.findViewById(R.id.btnAcceptRequest);
         btnCancelRequest = (Button) view.findViewById(R.id.btnCancelRequest);
         btnSendMessage = (Button) view.findViewById(R.id.btnSendMessage);
+        btnUnFriend = (Button) view.findViewById(R.id.btnUnFriend);
 
         if (purpose.equals(getMatches)) {
             btnSendRequest.setOnClickListener(new View.OnClickListener() {
@@ -180,7 +185,14 @@ public class DisplayProfileFragment extends Fragment
                     sendMessage();
                 }
             });
+            btnUnFriend.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    unFriend();
+                }
+            });
             btnSendMessage.setVisibility(View.VISIBLE);
+            btnUnFriend.setVisibility(View.VISIBLE);
         }
 
         retrieveProfile();
@@ -243,6 +255,8 @@ public class DisplayProfileFragment extends Fragment
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/sendRequest.php", jsonString, "POST",
                 REQ_TYPE);
+        btnSendRequest.setText("Friend request sent!");
+        btnSendRequest.setClickable(false);
     }
 
     private void acceptRequest() {
@@ -257,9 +271,21 @@ public class DisplayProfileFragment extends Fragment
 
     private void cancelRequest() {
         String REQ_TYPE = cancelRequest;
+        senderId = userId;
+        receiverId = sharedPreferences.getInt("id", 0);
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/cancelRequest.php", jsonString, "POST",
+                REQ_TYPE);
+    }
+
+    private void unFriend() {
+        String REQ_TYPE = unFriend;
+        senderId = userId;
+        receiverId = sharedPreferences.getInt("id", 0);
+        String jsonString = convertToJSON(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://"+HOST+"/"+FRIEND_DIR+"/unFriend.php", jsonString, "POST",
                 REQ_TYPE);
     }
 
@@ -300,7 +326,7 @@ public class DisplayProfileFragment extends Fragment
                 jsonText.key("nusnet");
                 jsonText.value(nusnet);
             } else if (REQ_TYPE.equals(sendRequest) || REQ_TYPE.equals(acceptRequest)
-                    || REQ_TYPE.equals(cancelRequest)) {
+                    || REQ_TYPE.equals(cancelRequest) || REQ_TYPE.equals(unFriend)) {
                 jsonText.key("senderId");
                 jsonText.value(senderId);
                 jsonText.key("receiverId");
@@ -394,10 +420,23 @@ public class DisplayProfileFragment extends Fragment
             } else if (REQ_TYPE.equals(cancelRequest)) {
                 String status = jsonObject.getString("Status");
                 if (status.equals("OK")) {
-                    Toast.makeText(getActivity(), "Cancel Request Sent", Toast.LENGTH_LONG)
+                    Toast.makeText(getActivity(), "Deleted friend request", Toast.LENGTH_LONG)
                             .show();
+                    btnAcceptRequest.setVisibility(View.INVISIBLE);
+                    btnCancelRequest.setVisibility(View.INVISIBLE);
                 } else {
                     Toast.makeText(getActivity(), "Cancellation Failed. Please Try Again Later.", Toast.LENGTH_LONG)
+                            .show();
+                }
+            } else if (REQ_TYPE.equals(unFriend)) {
+                String status = jsonObject.getString("Status");
+                if (status.equals("OK")) {
+                    Toast.makeText(getActivity(), "Removed from friend list", Toast.LENGTH_LONG)
+                            .show();
+                    btnSendMessage.setVisibility(View.INVISIBLE);
+                    btnUnFriend.setVisibility(View.INVISIBLE);
+                } else {
+                    Toast.makeText(getActivity(), "Unfriend Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
                 }
             }
