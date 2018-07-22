@@ -196,6 +196,7 @@ public class UpdateProfileFragment extends Fragment
         mSaveProfileBtn = (Button) view.findViewById(R.id.btnSaveProfile);
 
         Log.d("isRegistered in Update", String.valueOf(isRegistered));
+
         if (isRegistered) {
             retrieveProfile();
         }

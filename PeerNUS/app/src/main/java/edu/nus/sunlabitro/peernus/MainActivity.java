@@ -93,40 +93,9 @@ public class MainActivity extends AppCompatActivity
         mName = (TextView) headerView.findViewById(R.id.userName);
         mProfilePic = (ImageView) headerView.findViewById(R.id.profilePic);
 
-        Bundle bundle = getIntent().getExtras();
-
-        if (bundle != null) {
-            isRegistered = bundle.getBoolean("isRegistered");
-        }
-
         sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+        retrieveProfile();
 
-        if (!isRegistered) {
-            Fragment fragment = new UpdateProfileFragment();
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-            bundle.putBoolean("isRegistered", isRegistered);
-
-            fragment.setArguments(bundle);
-
-            // Replace whatever is in the fragment_container view with this fragment,
-            // and add the transaction to the back stack
-            transaction.replace(R.id.fragment_frame, fragment);
-            transaction.addToBackStack(null);
-
-            // Commit the transaction
-            transaction.commit();
-        } else {
-
-            retrieveProfile();
-
-            email = sharedPreferences.getString("email", "");
-            name = sharedPreferences.getString("name", "");
-
-            mName.setText(name);
-            mEmail.setText(email);
-
-        }
     }
 
     @Override
@@ -240,7 +209,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             MainActivity.this.startActivity(intent);
             MainActivity.this.finish();
-            SharedPreferences.Editor editor = getSharedPreferences(USER_PREF, MODE_PRIVATE).edit();
+            SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.clear().commit();
         }
 
@@ -257,10 +226,7 @@ public class MainActivity extends AppCompatActivity
     private void retrieveProfile() {
         String REQ_TYPE = retrieveProfile;
 
-        SharedPreferences sharedPreferences = getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
-
         id = sharedPreferences.getInt("id", 0);
-
         if (id == 0) {
             email = sharedPreferences.getString("email", "");
             String jsonString = convertToJSON(REQ_TYPE);
@@ -268,6 +234,7 @@ public class MainActivity extends AppCompatActivity
             task.execute("https://" + HOST + "/" + PROFILE_DIR + "/retrieveProfile.php", jsonString, "POST",
                     REQ_TYPE);
         } else {
+            isRegistered = true;
             generateUI();
         }
     }
@@ -276,7 +243,6 @@ public class MainActivity extends AppCompatActivity
     public void onTaskCompleted(String response, String REQ_TYPE) {
         if (REQ_TYPE.equals(retrieveProfile)) {
             retrieveFromJSON(response, REQ_TYPE);
-
             generateUI();
         }
     }
@@ -307,44 +273,50 @@ public class MainActivity extends AppCompatActivity
                 JSONObject jsonObject = new JSONObject(message);
                 id = jsonObject.getInt("id");
 
-                name = jsonObject.getString("name");
-                String sex = jsonObject.getString("sex");
-                int matricYear = Integer.parseInt(jsonObject.getString("matricYear"));
+                if (id == 0) {
+                    isRegistered = false;
+                } else {
 
-                JSONArray courseJsonArray = jsonObject.getJSONArray("course");
-                HashSet<String> selectedCourseSet = new HashSet<>();
-                for (int i = 0; i < courseJsonArray.length(); i++) {
-                    selectedCourseSet.add(courseJsonArray.getString(i));
+                    isRegistered = true;
+                    name = jsonObject.getString("name");
+                    String sex = jsonObject.getString("sex");
+                    int matricYear = Integer.parseInt(jsonObject.getString("matricYear"));
+
+                    JSONArray courseJsonArray = jsonObject.getJSONArray("course");
+                    HashSet<String> selectedCourseSet = new HashSet<>();
+                    for (int i = 0; i < courseJsonArray.length(); i++) {
+                        selectedCourseSet.add(courseJsonArray.getString(i));
+                    }
+
+                    JSONArray courseIdJsonArray = jsonObject.getJSONArray("courseId");
+                    HashSet<String> selectedCourseIdSet = new HashSet<>();
+                    for (int i = 0; i < courseIdJsonArray.length(); i++) {
+                        selectedCourseIdSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
+                    }
+
+                    JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
+                    HashSet<String> selectedModuleSet = new HashSet<>();
+                    for (int i = 0; i < moduleJsonArray.length(); i++) {
+                        selectedModuleSet.add(moduleJsonArray.get(i).toString());
+                    }
+
+                    String description = jsonObject.getString("description");
+                    int isProfilePicSet = jsonObject.getInt("profilePic");
+
+                    SharedPreferences.Editor editor =
+                            sharedPreferences.edit();
+                    editor.putInt("id", id);
+                    editor.putString("name", name);
+                    editor.putString("sex", sex);
+                    editor.putInt("matricYear", matricYear);
+                    editor.putStringSet("course", selectedCourseSet);
+                    editor.putStringSet("courseId", selectedCourseIdSet);
+                    editor.putStringSet("modules", selectedModuleSet);
+                    editor.putString("description", description);
+                    editor.putInt("isProfilePicSet", isProfilePicSet);
+                    editor.apply();
+                    editor.commit();
                 }
-
-                JSONArray courseIdJsonArray = jsonObject.getJSONArray("courseId");
-                HashSet<String> selectedCourseIdSet = new HashSet<>();
-                for (int i = 0; i < courseIdJsonArray.length(); i++) {
-                    selectedCourseIdSet.add(String.valueOf(courseIdJsonArray.getInt(i)));
-                }
-
-                JSONArray moduleJsonArray = jsonObject.getJSONArray("modules");
-                HashSet<String> selectedModuleSet = new HashSet<>();
-                for (int i = 0; i < moduleJsonArray.length(); i++) {
-                    selectedModuleSet.add(moduleJsonArray.get(i).toString());
-                }
-
-                String description = jsonObject.getString("description");
-                int isProfilePicSet = jsonObject.getInt("profilePic");
-
-                SharedPreferences.Editor editor =
-                        sharedPreferences.edit();
-                editor.putInt("id", id);
-                editor.putString("name", name);
-                editor.putString("sex", sex);
-                editor.putInt("matricYear", matricYear);
-                editor.putStringSet("course", selectedCourseSet);
-                editor.putStringSet("courseId", selectedCourseIdSet);
-                editor.putStringSet("modules", selectedModuleSet);
-                editor.putString("description", description);
-                editor.putInt("isProfilePicSet", isProfilePicSet);
-                editor.apply();
-                editor.commit();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -364,8 +336,6 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onSuccess(byte[] bytes) {
                                 // Use the bytes to display the image
-                                SharedPreferences sharedPreferences =
-                                        getSharedPreferences(USER_PREF, MODE_PRIVATE);
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
                                 editor.putString("profilePic", Arrays.toString(bytes));
                                 editor.commit();
@@ -384,11 +354,34 @@ public class MainActivity extends AppCompatActivity
                 });
             }
 
+            email = sharedPreferences.getString("email", "");
+            name = sharedPreferences.getString("name", "");
+
+            mEmail.setText(email);
+            mName.setText(name);
+
             Fragment fragment = new ProfilesListFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
             Bundle bundle = new Bundle();
             bundle.putString("purpose", "getMatches");
+            fragment.setArguments(bundle);
+
+            // Replace whatever is in the fragment_container view with this fragment,
+            // and add the transaction to the back stack
+            transaction.replace(R.id.fragment_frame, fragment);
+            transaction.addToBackStack(null);
+
+            // Commit the transaction
+            transaction.commit();
+        } else {
+            Fragment fragment = new UpdateProfileFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            Bundle bundle = new Bundle();
+
+            bundle.putBoolean("isRegistered", isRegistered);
+
             fragment.setArguments(bundle);
 
             // Replace whatever is in the fragment_container view with this fragment,
