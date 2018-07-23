@@ -119,6 +119,7 @@
             android:layout_above="@id/backBtn"
             android:layout_marginHorizontal="5dp"
             android:orientation="horizontal">
+
             <Button
                 android:id="@+id/loginbtn"
                 android:layout_width="match_parent"
@@ -151,7 +152,6 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_marginHorizontal="5dp"
-            android:layout_weight="1"
             android:layout_gravity="center"
             android:layout_marginBottom="15dp"
             android:layout_marginRight="5dp"
@@ -159,6 +159,23 @@
             android:fontFamily="@font/montserrat_bold"
             android:text="Go Back"
             android:textColor="@color/colorAccent" />
+
+        <FrameLayout
+            android:id="@+id/loadingFrame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/background"
+            android:translationZ="5dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/loadingImageView"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/loading" />
+
+        </FrameLayout>
 
     </RelativeLayout>
 

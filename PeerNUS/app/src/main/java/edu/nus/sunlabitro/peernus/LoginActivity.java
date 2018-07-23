@@ -17,9 +17,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -53,6 +56,8 @@ public class LoginActivity extends AppCompatActivity
     private Button mEmailLoginBtn;
     private Button mNusnetLoginBtn;
     private Button mBackBtn;
+    private FrameLayout mLoadingFrame;
+    private ImageView mLoadingImageView;
 
     private FirebaseAuth mAuth;
     private String email;
@@ -80,6 +85,8 @@ public class LoginActivity extends AppCompatActivity
         mEmailLoginBtn = (Button) findViewById(R.id.emailLoginBtn);
         mNusnetLoginBtn = (Button) findViewById(R.id.nusnetLoginBtn);
         mBackBtn = (Button) findViewById(R.id.backBtn);
+        mLoadingFrame = (FrameLayout) findViewById(R.id.loadingFrame);
+        mLoadingImageView = (ImageView) findViewById(R.id.loadingImageView);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -303,6 +310,11 @@ public class LoginActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         if (email != null) {
+            mLoadingFrame.setVisibility(View.VISIBLE);
+            Glide.with(this)
+                    .load(R.drawable.loading)
+                    .into(mLoadingImageView);
+
             String REQ_TYPE = retrieveLogin;
 
             String jsonString = convertToJSON(REQ_TYPE);
@@ -336,6 +348,7 @@ public class LoginActivity extends AppCompatActivity
                             } else {
                                 Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_LONG).show();
                             }
+                            mLoadingFrame.setVisibility(View.GONE);
                         }
                     });
         }
