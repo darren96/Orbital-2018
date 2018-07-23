@@ -136,8 +136,8 @@ public class ChatActivity extends AppCompatActivity {
         mProfilePicImageView = (ImageView) findViewById(R.id.profilePic);
         mFriendNameTextView = (TextView) findViewById(R.id.friendName);
 
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         if (bytes != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             mProfilePicImageView.setImageBitmap(bitmap);
         }
 

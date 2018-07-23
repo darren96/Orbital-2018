@@ -298,9 +298,9 @@ public class DisplayProfileFragment extends Fragment
         bundle.putString("receiverName", nameTV.getText().toString());
         bundle.putString("email", nusnet);
 
-        byte[] bytes = bitMapToByteArray(bitmap);
 
-        if (bytes.length > 0) {
+        if (bitmap != null) {
+            byte[] bytes = bitMapToByteArray(bitmap);
             bundle.putByteArray("profilePic", bytes);
         } else {
             bundle.putByteArray("profilePic", null);
@@ -374,11 +374,13 @@ public class DisplayProfileFragment extends Fragment
                 modulesTV.setText(moduleStr);
                 descriptionTV.setText(description);
 
+                Log.d("DisplayProfileFragment", String.valueOf(profilePic));
+
                 if (profilePic != 0) {
                     FirebaseStorage storage = FirebaseStorage.getInstance();
                     StorageReference storageRef = storage.getReference();
 
-                    storageRef.child("images/" + senderId).getBytes(ONE_MEGABYTE)
+                    storageRef.child("images/" + userId).getBytes(ONE_MEGABYTE)
                             .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                 @Override
                                 public void onSuccess(byte[] bytes) {
