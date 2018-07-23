@@ -413,6 +413,8 @@ public class DisplayProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Friends Request Accepted", Toast.LENGTH_LONG)
                             .show();
+                    btnAcceptRequest.setVisibility(View.INVISIBLE);
+                    btnCancelRequest.setVisibility(View.INVISIBLE);
                 } else {
                     Toast.makeText(getActivity(), "Acceptance Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
