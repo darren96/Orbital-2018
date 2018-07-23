@@ -2,7 +2,6 @@ package edu.nus.sunlabitro.peernus;
 
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -46,6 +45,7 @@ public class LoginActivity extends AppCompatActivity
     private static String USER_PREF;
     private static String HOST;
     private static String LOGIN_DIR;
+    private static String FIREBASE_STATIC_HOST;
 
     private TextView mEmailTV;
     private TextView mPasswordTV;
@@ -75,6 +75,7 @@ public class LoginActivity extends AppCompatActivity
         USER_PREF = getString(R.string.USER_PREF);
         HOST = getString(R.string.HOST);
         LOGIN_DIR = getString(R.string.LOGIN_DIR);
+        FIREBASE_STATIC_HOST = getString(R.string.FIREBASE_ADMIN_HOST);
 
         mEmailTV = (TextView) findViewById(R.id.usernameTV);
         mPasswordTV = (TextView) findViewById(R.id.passwordTV);
@@ -179,36 +180,6 @@ public class LoginActivity extends AppCompatActivity
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         updateUI(currentUser);
-    }
-
-    public void loginBtnClicked(final String email, final String password) {
-
-        mAuth.fetchProvidersForEmail(email)
-                .addOnCompleteListener(this, new OnCompleteListener<ProviderQueryResult>() {
-                    @Override
-                    public void onComplete(Task<ProviderQueryResult> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "checking to see if user exists in firebase or not");
-                            ProviderQueryResult result = task.getResult();
-
-                            if (result != null && result.getProviders() != null
-                                    && result.getProviders().size() > 0) {
-                                Log.d(TAG, "User exists, trying to login using entered credentials");
-                                loginUser(email, password);
-                            } else {
-                                Log.d(TAG, "User doesn't exist, creating account");
-                                registerUser(email, password);
-                            }
-                        } else {
-
-                            Log.w(TAG, "fetchProvidersForEmail:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Connection failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-
-                        // ...
-                    }
-                });
     }
 
     public void registerUser(String email, String password) {
@@ -325,7 +296,7 @@ public class LoginActivity extends AppCompatActivity
             REQ_TYPE = retrieveToken;
             jsonString = convertToJSON(REQ_TYPE);
             task = new HttpAsyncTask(this);
-            task.execute("https://peer-nus.herokuapp.com/createToken", jsonString, "POST", REQ_TYPE);
+            task.execute("https://" + FIREBASE_STATIC_HOST + "/createToken", jsonString, "POST", REQ_TYPE);
 
         }
     }
@@ -333,25 +304,25 @@ public class LoginActivity extends AppCompatActivity
     @Override
     public void onTaskCompleted(String response, String REQ_TYPE) {
         retrieveFromJson(response, REQ_TYPE);
-        loginMode = nusnetLogin;
 
-        if (REQ_TYPE.equals(retrieveToken) && status.equals("OK")) {
-            mAuth.signInWithCustomToken(token)
-                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                FirebaseUser user = mAuth.getCurrentUser();
-                                Toast.makeText(LoginActivity.this, "Login successfully", Toast.LENGTH_LONG).show();
-                                updateUI(user);
-                                updateUserEmail(user);
-                            } else {
-                                Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_LONG).show();
+        if (REQ_TYPE != null) {
+            if (REQ_TYPE.equals(retrieveToken) && status.equals("OK")) {
+                mAuth.signInWithCustomToken(token)
+                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    Toast.makeText(LoginActivity.this, "Login successfully", Toast.LENGTH_LONG).show();
+                                    updateUI(user);
+                                } else {
+                                    Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_LONG).show();
+                                }
                             }
-                            mLoadingFrame.setVisibility(View.GONE);
-                        }
-                    });
+                        });
+            }
         }
+        mLoadingFrame.setVisibility(View.GONE);
     }
 
     private String convertToJSON(String REQ_TYPE) {
@@ -372,7 +343,9 @@ public class LoginActivity extends AppCompatActivity
         try {
             jsonObject = new JSONObject(message);
             if (REQ_TYPE.equals(retrieveLogin)) {
-                name = jsonObject.getString("name");
+                if (jsonObject.has("name")) {
+                    name = jsonObject.getString("name");
+                }
                 status = jsonObject.getString("status");
             } else if (REQ_TYPE.equals(retrieveToken)) {
                 token = jsonObject.getString("token");
@@ -382,14 +355,4 @@ public class LoginActivity extends AppCompatActivity
         }
     }
 
-    private void updateUserEmail(FirebaseUser user) {
-        user.updateEmail(email + "@u.nus.edu").addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Email Update Successful");
-                    }
-                }
-            });
-    }
 }

@@ -4,6 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -80,7 +85,7 @@ public class ProfilesListAdapter extends ArrayAdapter<Profile> {
                             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
                             ImageView mProfilePic = (ImageView) rowView.findViewById(R.id.profilePic);
-                            Bitmap imageRounded = MainActivity.imageRounded(bitmap);
+                            Bitmap imageRounded = imageRounded(bitmap);
                             mProfilePic.setImageBitmap(imageRounded);
 
                         }
@@ -93,5 +98,18 @@ public class ProfilesListAdapter extends ArrayAdapter<Profile> {
         }
         // 5. return rowView
         return rowView;
+    }
+
+    private Bitmap imageRounded(Bitmap bitmap) {
+        Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
+                bitmap.getHeight(), bitmap.getConfig());
+        Canvas canvas = new Canvas(imageRounded);
+        Paint mpaint = new Paint();
+        mpaint.setAntiAlias(true);
+        mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP));
+        canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
+                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+        return imageRounded;
     }
 }

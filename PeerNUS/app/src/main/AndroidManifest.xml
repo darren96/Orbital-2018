@@ -54,16 +54,6 @@
             android:name=".PeerNUSFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!--data
-                    android:host="peernus.000webhostapp.com"
-                    android:path="openid.php"
-                    android:scheme="https" /-->
-                <data
-                    android:scheme="@string/app_name" />
             </intent-filter>
         </service
         >

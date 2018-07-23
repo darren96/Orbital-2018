@@ -17,6 +17,7 @@
     <string name="LOGIN_DIR">Login</string>
     <string name="NUSMOD_HOST">api.nusmods.com</string>
     <string name="MOD_DIR">2017-2018</string>
+    <string name="FIREBASE_ADMIN_HOST">peer-nus.herokuapp.com</string>
     <string name="search_hint">Eg: CS1010</string>
     <string name="USER_PREF">user</string>
 

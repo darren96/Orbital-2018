@@ -5,6 +5,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -344,7 +349,7 @@ public class UpdateProfileFragment extends Fragment
                 bytes[i] = Byte.parseByte(split[i]);
             }
             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            Bitmap imageRounded = MainActivity.imageRounded(bitmap);
+            Bitmap imageRounded = imageRounded(bitmap);
             mProfilePic.setImageBitmap(imageRounded);
         }
 
@@ -445,7 +450,7 @@ public class UpdateProfileFragment extends Fragment
                 profilePicUri = data.getData();
                 mProfilePic.setImageURI(data.getData());
                 Bitmap bitmap = ((BitmapDrawable) mProfilePic.getDrawable()).getBitmap();
-                mProfilePic.setImageBitmap(MainActivity.imageRounded(bitmap));
+                mProfilePic.setImageBitmap(imageRounded(bitmap));
             }
         }
     }
@@ -623,7 +628,7 @@ public class UpdateProfileFragment extends Fragment
                         .findViewById(R.id.nav_view);
                 View headerView = navigationView.getHeaderView(0);
                 ImageView headerProfilePic = (ImageView) headerView.findViewById(R.id.profilePic);
-                Bitmap roundedImage = MainActivity.imageRounded(bitmap);
+                Bitmap roundedImage = imageRounded(bitmap);
 
                 headerProfilePic.setImageBitmap(roundedImage);
             }
@@ -734,5 +739,17 @@ public class UpdateProfileFragment extends Fragment
         }
     }
 
+    private Bitmap imageRounded(Bitmap bitmap) {
+        Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
+                bitmap.getHeight(), bitmap.getConfig());
+        Canvas canvas = new Canvas(imageRounded);
+        Paint mpaint = new Paint();
+        mpaint.setAntiAlias(true);
+        mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP));
+        canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
+                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+        return imageRounded;
+    }
 
 }

@@ -31,6 +31,9 @@ import android.widget.TextView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -327,31 +330,7 @@ public class MainActivity extends AppCompatActivity
         if(isRegistered) {
 
             if (sharedPreferences.getInt("isProfilePicSet", 0) > 0) {
-
-                final FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference storageRef = storage.getReference();
-
-                storageRef.child("images/" + id).getBytes(ONE_MEGABYTE)
-                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                            @Override
-                            public void onSuccess(byte[] bytes) {
-                                // Use the bytes to display the image
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("profilePic", Arrays.toString(bytes));
-                                editor.commit();
-
-                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-                                Bitmap imageRounded = imageRounded(bitmap);
-                                mProfilePic.setImageBitmap(imageRounded);
-
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle any errors
-                    }
-                });
+                getProfileImage();
             }
 
             email = sharedPreferences.getString("email", "");
@@ -359,6 +338,9 @@ public class MainActivity extends AppCompatActivity
 
             mEmail.setText(email);
             mName.setText(name);
+
+            String token = FirebaseInstanceId.getInstance().getToken();
+            sendTokenToDatabase(token);
 
             Fragment fragment = new ProfilesListFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -394,7 +376,20 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public static Bitmap imageRounded(Bitmap bitmap) {
+    private void sendTokenToDatabase(String token) {
+        int id = sharedPreferences.getInt("id", 0);
+        String name = sharedPreferences.getString("name", "");
+        String email = sharedPreferences.getString("email", "");
+
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference databaseReference = firebaseDatabase.getReference("users");
+
+        User currUser = new User(id, name, email, token);
+
+        databaseReference.child(String.valueOf(id)).setValue(currUser);
+    }
+
+    private Bitmap imageRounded(Bitmap bitmap) {
         Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
                 bitmap.getHeight(), bitmap.getConfig());
         Canvas canvas = new Canvas(imageRounded);
@@ -405,5 +400,32 @@ public class MainActivity extends AppCompatActivity
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
                 bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
         return imageRounded;
+    }
+
+    private void getProfileImage() {
+        final FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+
+        storageRef.child("images/" + id).getBytes(ONE_MEGABYTE)
+                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        // Use the bytes to display the image
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("profilePic", Arrays.toString(bytes));
+                        editor.commit();
+
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                        Bitmap imageRounded = imageRounded(bitmap);
+                        mProfilePic.setImageBitmap(imageRounded);
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+            }
+        });
     }
 }

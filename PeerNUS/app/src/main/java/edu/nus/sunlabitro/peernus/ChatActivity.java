@@ -54,12 +54,15 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import org.json.JSONException;
+import org.json.JSONStringer;
+
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
 
     private FirebaseDatabase database;
     private FirebaseStorage storage;
@@ -70,6 +73,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private String USER_PREF;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
+    private static String FIREBASE_ADMIN_HOST;
 
     private ImageView mProfilePicImageView;
     private TextView mFriendNameTextView;
@@ -83,6 +87,8 @@ public class ChatActivity extends AppCompatActivity {
     private String receiverName;
     private String email;
     private byte[] bytes;
+    private String messageText;
+    private String receiverToken;
 
     private ArrayList<Message> messages;
 
@@ -112,6 +118,7 @@ public class ChatActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         USER_PREF = getString(R.string.USER_PREF);
+        FIREBASE_ADMIN_HOST = getString(R.string.FIREBASE_ADMIN_HOST);
 
         username = getSharedPreferences(USER_PREF, MODE_PRIVATE)
                 .getString("name", "");
@@ -130,6 +137,8 @@ public class ChatActivity extends AppCompatActivity {
         storage = FirebaseStorage.getInstance();
         mFirebaseDatabaseReference = database.getReference("messages");
         mFirebaseStorageReference = storage.getReference("messages");
+
+        receiverToken = retrieveReceiverToken();
 
         messages = new ArrayList<>();
 
@@ -291,41 +300,15 @@ public class ChatActivity extends AppCompatActivity {
         mChatList.setLayoutManager(mLinearLayoutManager);
         mChatList.setAdapter(mFirebaseAdapter);
 
-        mFirebaseDatabaseReference.child(chatroomId).addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                sendNotification(dataSnapshot.getValue(Message.class).getText());
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
     }
 
     private void sendMessage() {
-        String messageText = mMessageEditText.getText().toString();
+        messageText = mMessageEditText.getText().toString();
         long timestamp = System.currentTimeMillis();
         Message message = new Message(messageText, username, timestamp,null);
         mFirebaseDatabaseReference.child(chatroomId).push().setValue(message);
         mMessageEditText.setText("");
+
     }
 
     private void sendImage() {
@@ -427,52 +410,43 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendNotification(String messageBody) {
-
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
-
-        if (!cn.getClassName().equals(ChatActivity.class.getName())) {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-            Bundle bundle = new Bundle();
-            bundle.putString("receiverName", receiverName);
-            bundle.putString("email", email);
-
-            if (bytes.length > 0) {
-                bundle.putByteArray("profilePic", bytes);
-            } else {
-                bundle.putByteArray("profilePic", null);
-            }
-
-            intent.putExtras(bundle);
-
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-                    PendingIntent.FLAG_ONE_SHOT);
-
-
-            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder notificationBuilder =
-                    new NotificationCompat.Builder(this, chatroomId)
-                            .setSmallIcon(R.drawable.ic_peernus_logo_round)
-                            .setContentTitle(receiverName)
-                            .setContentText(messageBody)
-                            .setAutoCancel(true)
-                            .setSound(defaultSoundUri)
-                            .setContentIntent(pendingIntent);
-
-            NotificationManager notificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            // Since android Oreo notification channel is needed.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel channel = new NotificationChannel(chatroomId,
-                        "Channel human readable title",
-                        NotificationManager.IMPORTANCE_DEFAULT);
-                notificationManager.createNotificationChannel(channel);
-            }
-
-            notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
-        }
+        String REQ_TYPE = "sendMessage";
+        String jsonString = convertToJsonString();
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://" + FIREBASE_ADMIN_HOST + "/sendMessage", jsonString, "POST", REQ_TYPE);
     }
+
+    @Override
+    public void onTaskCompleted(String response, String REQ_TYPE) {
+
+    }
+
+    private String convertToJsonString() {
+        JSONStringer jsonText = new JSONStringer();
+
+        try {
+            jsonText.object();
+            jsonText.key("notification");
+            jsonText.object();
+            jsonText.key("title");
+            jsonText.value(username);
+            jsonText.key("body");
+            jsonText.value(messageText);
+            jsonText.endObject();
+            jsonText.key("token");
+            jsonText.value(receiverToken);
+            jsonText.endObject();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonText.toString();
+    }
+
+    private String retrieveReceiverToken() {
+        DatabaseReference userReference = database.getReference("users");
+        userReference.child("");
+        return "";
+    }
+
 }
