@@ -57,7 +57,6 @@ public class ProfilesListFragment extends Fragment
     private static String FRIENDS_DIR;
 
     private int id;
-    private String email;
 
     private JSONArray profiles;
 
@@ -198,29 +197,31 @@ public class ProfilesListFragment extends Fragment
 
         ArrayList<Profile> profileList = generateData();
         if (profileList.size() != 0) {
-            ProfilesListAdapter profilesListAdapter =
-                    new ProfilesListAdapter(getActivity(), generateData());
-            mMatchesListView.setAdapter(profilesListAdapter);
-            mMatchesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Fragment fragment = new DisplayProfileFragment();
-                    FragmentTransaction transaction = getActivity()
-                            .getSupportFragmentManager().beginTransaction();
+            if (getActivity() != null) {
+                ProfilesListAdapter profilesListAdapter =
+                        new ProfilesListAdapter(getActivity(), generateData());
+                mMatchesListView.setAdapter(profilesListAdapter);
+                mMatchesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Fragment fragment = new DisplayProfileFragment();
+                        FragmentTransaction transaction = getActivity()
+                                .getSupportFragmentManager().beginTransaction();
 
-                    // Replace whatever is in the fragment_container view with this fragment,
-                    // and add the transaction to the back stack
-                    Bundle args = new Bundle();
-                    TextView nusnetTV = (TextView) view.findViewById(R.id.nusnet);
-                    String nusnet = nusnetTV.getText().toString();
-                    args.putString("nusnet", nusnet);
-                    args.putString("purpose", purpose);
-                    fragment.setArguments(args);
-                    transaction.replace(R.id.fragment_frame, fragment);
-                    transaction.addToBackStack(null);
-                    transaction.commit();
-                }
-            });
+                        // Replace whatever is in the fragment_container view with this fragment,
+                        // and add the transaction to the back stack
+                        Bundle args = new Bundle();
+                        TextView nusnetTV = (TextView) view.findViewById(R.id.nusnet);
+                        String nusnet = nusnetTV.getText().toString();
+                        args.putString("nusnet", nusnet);
+                        args.putString("purpose", purpose);
+                        fragment.setArguments(args);
+                        transaction.replace(R.id.fragment_frame, fragment);
+                        transaction.addToBackStack(null);
+                        transaction.commit();
+                    }
+                });
+            }
         } else {
             mNoDataTextView.setVisibility(View.VISIBLE);
         }
