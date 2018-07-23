@@ -97,6 +97,7 @@
             android:background="@color/colorPrimary"
             android:fontFamily="@font/montserrat_bold"
             android:text="Login with Email"
+            android:visibility="invisible"
             android:textColor="@color/colorAccent" />
 
         <Button

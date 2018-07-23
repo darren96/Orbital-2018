@@ -90,6 +90,7 @@ public class LoginActivity extends AppCompatActivity
 
         mAuth = FirebaseAuth.getInstance();
 
+
         mEmailTV.setVisibility(View.GONE);
         mEmail.setVisibility(View.GONE);
         mPasswordTV.setVisibility(View.GONE);
@@ -166,7 +167,6 @@ public class LoginActivity extends AppCompatActivity
                 mSignUpBtn.setVisibility(View.GONE);
                 mLoginBtn.setVisibility(View.GONE);
                 mNusnetLoginBtn.setVisibility(View.VISIBLE);
-                mEmailLoginBtn.setVisibility(View.VISIBLE);
                 mBackBtn.setVisibility(View.GONE);
             }
         });

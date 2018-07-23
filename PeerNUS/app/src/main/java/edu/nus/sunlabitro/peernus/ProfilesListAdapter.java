@@ -25,7 +25,7 @@ public class ProfilesListAdapter extends ArrayAdapter<Profile> {
 
     private final Context context;
     private final ArrayList<Profile> profilesArrayList;
-    private final int ONE_MEGABYTE = 1024 * 1024;
+    private final int ONE_MEGABYTE = 2048 * 2048;
 
     public ProfilesListAdapter(Context context, ArrayList<Profile> profilesArrayList) {
 

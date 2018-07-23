@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity
     private String email;
     private String name;
 
-    final long ONE_MEGABYTE = 1024 * 1024;
+    final long ONE_MEGABYTE = 2048 * 2048;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

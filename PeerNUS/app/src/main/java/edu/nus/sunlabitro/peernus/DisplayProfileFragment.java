@@ -63,7 +63,7 @@ public class DisplayProfileFragment extends Fragment
     private final String retrieveRequests = "getRequests";
     private final String retrieveFriends = "getFriends";
 
-    private final int ONE_MEGABYTE = 1024 * 1024;
+    private final int ONE_MEGABYTE = 2048 * 2048;
 
     private static String HOST;
     private static String PROFILE_DIR;
@@ -255,8 +255,7 @@ public class DisplayProfileFragment extends Fragment
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/sendRequest.php", jsonString, "POST",
                 REQ_TYPE);
-        btnSendRequest.setText("Friend request sent!");
-        btnSendRequest.setClickable(false);
+        btnSendRequest.setVisibility(View.INVISIBLE);
     }
 
     private void acceptRequest() {
