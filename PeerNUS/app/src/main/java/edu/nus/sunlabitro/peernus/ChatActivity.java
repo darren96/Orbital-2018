@@ -4,6 +4,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -63,6 +68,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
     private String USER_PREF;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
     private static String FIREBASE_ADMIN_HOST;
+    private final int ONE_MEGABYTE = 2048 * 2048;
 
     private ImageView mProfilePicImageView;
     private TextView mFriendNameTextView;
@@ -77,6 +83,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
     private int receiverId;
     private String receiverName;
     private String email;
+    private int profilePicId;
     private byte[] bytes;
     private String messageText;
     private String receiverToken;
@@ -121,13 +128,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         receiverId = bundle.getInt("receiverId");
         receiverName = bundle.getString("receiverName");
         email = bundle.getString("email");
-        bytes = bundle.getByteArray("profilePic");
-
-        if (userId < receiverId) {
-            chatroomId = userId + "_" + receiverId;
-        } else {
-            chatroomId = receiverId + "_" + userId;
-        }
+        profilePicId = bundle.getInt("profilePicId");
 
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -136,14 +137,19 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
 
         retrieveReceiverToken();
 
+        if (receiverId < userId) {
+            chatroomId = receiverId + "_" + userId;
+        } else {
+            chatroomId = userId + "_" +receiverId;
+        }
+
         messages = new ArrayList<>();
 
         mProfilePicImageView = (ImageView) findViewById(R.id.profilePic);
         mFriendNameTextView = (TextView) findViewById(R.id.friendName);
 
-        if (bytes != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            mProfilePicImageView.setImageBitmap(bitmap);
+        if (profilePicId > 0) {
+            retrieveProfilePic();
         }
 
         mFriendNameTextView.setText(receiverName);
@@ -456,6 +462,42 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
 
             }
         });
+    }
+
+    private void retrieveProfilePic() {
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+
+        storageRef.child("images/" + userId).getBytes(ONE_MEGABYTE)
+                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        // Use the bytes to display the image
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                        bitmap = imageRounded(bitmap);
+                        mProfilePicImageView.setImageBitmap(bitmap);
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+            }
+        });
+    }
+
+    public static Bitmap imageRounded(Bitmap bitmap) {
+        Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
+                bitmap.getHeight(), bitmap.getConfig());
+        Canvas canvas = new Canvas(imageRounded);
+        Paint mpaint = new Paint();
+        mpaint.setAntiAlias(true);
+        mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP));
+        canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
+                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+        return imageRounded;
     }
 
 }

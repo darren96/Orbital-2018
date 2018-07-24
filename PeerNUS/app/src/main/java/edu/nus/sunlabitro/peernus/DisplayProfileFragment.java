@@ -26,10 +26,16 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
@@ -70,12 +76,16 @@ public class DisplayProfileFragment extends Fragment
     private static String REQUEST_DIR;
     private static String FRIEND_DIR;
     private static String USER_PREF;
+    private static String FIREBASE_ADMIN_HOST;
 
+    private FirebaseDatabase database;
     private SharedPreferences sharedPreferences;
     private String nusnet;
     private String purpose;
     private Bitmap bitmap;
+    private String receiverToken;
     private int userId;
+    private String username;
     private int senderId;
     private int receiverId;
 
@@ -124,14 +134,19 @@ public class DisplayProfileFragment extends Fragment
             purpose = getArguments().getString(ARG_PARAM2);
         }
 
+        database = FirebaseDatabase.getInstance();
+
         HOST = getString(R.string.HOST);
         PROFILE_DIR = getString(R.string.PROFILE_DIR);
         REQUEST_DIR = getString(R.string.REQUEST_DIR);
         FRIEND_DIR = getString(R.string.FRIENDS_DIR);
         USER_PREF = getString(R.string.USER_PREF);
+        FIREBASE_ADMIN_HOST = getString(R.string.FIREBASE_ADMIN_HOST);
 
         sharedPreferences = getActivity()
                 .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
+
+        username = sharedPreferences.getString("name", "");
 
     }
 
@@ -297,14 +312,7 @@ public class DisplayProfileFragment extends Fragment
         bundle.putInt("receiverId", receiverId);
         bundle.putString("receiverName", nameTV.getText().toString());
         bundle.putString("email", nusnet);
-
-
-        if (bitmap != null) {
-            byte[] bytes = bitMapToByteArray(bitmap);
-            bundle.putByteArray("profilePic", bytes);
-        } else {
-            bundle.putByteArray("profilePic", null);
-        }
+        bundle.putInt("profilePicId", 0);
 
         intent.putExtras(bundle);
         startActivity(intent);
@@ -401,11 +409,14 @@ public class DisplayProfileFragment extends Fragment
                     });
                 }
 
+                retrieveReceiverToken();
+
             } else if (REQ_TYPE.equals(sendRequest)) {
                 String status = jsonObject.getString("Status");
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Friends Request Sent", Toast.LENGTH_LONG)
                             .show();
+                    sendNotification(sendRequest);
                 } else {
                     Toast.makeText(getActivity(), "Request Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
@@ -415,6 +426,7 @@ public class DisplayProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Friends Request Accepted", Toast.LENGTH_LONG)
                             .show();
+                    sendNotification(acceptRequest);
                     btnAcceptRequest.setVisibility(View.INVISIBLE);
                     btnCancelRequest.setVisibility(View.INVISIBLE);
                 } else {
@@ -450,10 +462,41 @@ public class DisplayProfileFragment extends Fragment
         }
     }
 
-    public byte[] bitMapToByteArray(Bitmap bitmap){
-        ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, bs);
-        return bs.toByteArray();
+    private void sendNotification(String REQ_TYPE) {
+        String jsonString = convertToJsonString(REQ_TYPE);
+        HttpAsyncTask task = new HttpAsyncTask(this);
+        task.execute("https://" + FIREBASE_ADMIN_HOST + "/sendMessage", jsonString, "POST", REQ_TYPE);
+
+    }
+
+    private String convertToJsonString(String REQ_TYPE) {
+        JSONStringer jsonText = new JSONStringer();
+
+        try {
+            jsonText.object();
+            jsonText.key("notification");
+            jsonText.object();
+            jsonText.key("title");
+            if (REQ_TYPE.equals(sendRequest)) {
+                jsonText.value("Friend Request");
+            } else if (REQ_TYPE.equals(acceptRequest)) {
+                jsonText.value("Friend");
+            }
+            jsonText.key("body");
+            if (REQ_TYPE.equals(sendRequest)) {
+                jsonText.value("You have received a friend request from " + username + ".");
+            } else if (REQ_TYPE.equals(acceptRequest)) {
+                jsonText.value("You and " + username + " are friends now. You can start and chat now.");
+            }
+            jsonText.endObject();
+            jsonText.key("token");
+            jsonText.value(receiverToken);
+            jsonText.endObject();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        
+        return jsonText.toString();
     }
 
     public static Bitmap imageRounded(Bitmap bitmap) {
@@ -467,6 +510,23 @@ public class DisplayProfileFragment extends Fragment
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
                 bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
         return imageRounded;
+    }
+
+    private void retrieveReceiverToken() {
+        DatabaseReference userReference = database.getReference("users");
+        userReference.child(String.valueOf(receiverId))
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        User user = dataSnapshot.getValue(User.class);
+                        receiverToken = user.getToken();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
 }
