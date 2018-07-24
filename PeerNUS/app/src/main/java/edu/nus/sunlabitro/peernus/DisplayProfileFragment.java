@@ -294,6 +294,7 @@ public class DisplayProfileFragment extends Fragment
         Intent intent = new Intent(getActivity(), ChatActivity.class);
 
         Bundle bundle = new Bundle();
+        bundle.putInt("receiverId", receiverId);
         bundle.putString("receiverName", nameTV.getText().toString());
         bundle.putString("email", nusnet);
 

@@ -27,7 +27,6 @@ import java.util.HashMap;
 public class PeerNUSFirebaseMessagingService extends FirebaseMessagingService {
 
     private final String TAG = "PeerNUSFMS";
-    private final String USER_PREF = getString(R.string.USER_PREF);
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -55,60 +54,11 @@ public class PeerNUSFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-            // sendNotification();
         }
 
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
     }
 
-//    public void sendNotification () {
-//        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-//        ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
-//
-//        if (!cn.getClassName().equals(ChatActivity.class.getName())) {
-//            Intent intent = new Intent(this, ChatActivity.class);
-//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//
-//            Bundle bundle = new Bundle();
-//            bundle.putString("receiverName", receiverName);
-//            bundle.putString("email", email);
-//
-//            if (bytes.length > 0) {
-//                bundle.putByteArray("profilePic", bytes);
-//            } else {
-//                bundle.putByteArray("profilePic", null);
-//            }
-//
-//            intent.putExtras(bundle);
-//
-//            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-//                    PendingIntent.FLAG_ONE_SHOT);
-//
-//
-//            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-//            NotificationCompat.Builder notificationBuilder =
-//                    new NotificationCompat.Builder(this, chatroomId)
-//                            .setSmallIcon(R.drawable.ic_peernus_logo_round)
-//                            .setContentTitle(receiverName)
-//                            .setContentText(messageBody)
-//                            .setAutoCancel(true)
-//                            .setSound(defaultSoundUri)
-//                            .setContentIntent(pendingIntent);
-//
-//            NotificationManager notificationManager =
-//                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//
-//            // Since android Oreo notification channel is needed.
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                NotificationChannel channel = new NotificationChannel(chatroomId,
-//                        "Channel human readable title",
-//                        NotificationManager.IMPORTANCE_DEFAULT);
-//                notificationManager.createNotificationChannel(channel);
-//            }
-//
-//            notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
-//        }
-//    }
 
 }

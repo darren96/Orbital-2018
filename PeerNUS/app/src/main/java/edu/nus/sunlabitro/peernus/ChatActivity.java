@@ -1,28 +1,18 @@
 package edu.nus.sunlabitro.peernus;
 
-import android.app.ActivityManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -42,12 +32,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -83,12 +72,16 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
     private Button mSendMsgBtn;
 
     private String chatroomId;
+    private int userId;
     private String username;
+    private int receiverId;
     private String receiverName;
     private String email;
     private byte[] bytes;
     private String messageText;
     private String receiverToken;
+
+    private SharedPreferences sharedPreferences;
 
     private ArrayList<Message> messages;
 
@@ -120,17 +113,20 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         USER_PREF = getString(R.string.USER_PREF);
         FIREBASE_ADMIN_HOST = getString(R.string.FIREBASE_ADMIN_HOST);
 
-        username = getSharedPreferences(USER_PREF, MODE_PRIVATE)
-                .getString("name", "");
+        SharedPreferences sharedPreferences = getSharedPreferences(USER_PREF, MODE_PRIVATE);
+        userId = sharedPreferences.getInt("id", 0);
+        username = sharedPreferences.getString("name", "");
+
         Bundle bundle = getIntent().getExtras();
+        receiverId = bundle.getInt("receiverId");
         receiverName = bundle.getString("receiverName");
         email = bundle.getString("email");
         bytes = bundle.getByteArray("profilePic");
 
-        if (username.compareTo(receiverName) < 0) {
-            chatroomId = username + "_" + receiverName;
+        if (userId < receiverId) {
+            chatroomId = userId + "_" + receiverId;
         } else {
-            chatroomId = receiverName + "_" + username;
+            chatroomId = receiverId + "_" + userId;
         }
 
         database = FirebaseDatabase.getInstance();
@@ -138,7 +134,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         mFirebaseDatabaseReference = database.getReference("messages");
         mFirebaseStorageReference = storage.getReference("messages");
 
-        receiverToken = retrieveReceiverToken();
+        retrieveReceiverToken();
 
         messages = new ArrayList<>();
 
@@ -308,7 +304,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         Message message = new Message(messageText, username, timestamp,null);
         mFirebaseDatabaseReference.child(chatroomId).push().setValue(message);
         mMessageEditText.setText("");
-
+        sendNotification();
     }
 
     private void sendImage() {
@@ -383,6 +379,8 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
                                 }
                             }
                         });
+                messageText = "[Image]";
+                sendNotification();
             }
         }
     }
@@ -409,7 +407,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         super.onResume();
     }
 
-    private void sendNotification(String messageBody) {
+    private void sendNotification() {
         String REQ_TYPE = "sendMessage";
         String jsonString = convertToJsonString();
         HttpAsyncTask task = new HttpAsyncTask(this);
@@ -443,10 +441,22 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         return jsonText.toString();
     }
 
-    private String retrieveReceiverToken() {
+    private void retrieveReceiverToken() {
         DatabaseReference userReference = database.getReference("users");
-        userReference.child("");
-        return "";
+        userReference.child(String.valueOf(receiverId))
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User user = dataSnapshot.getValue(User.class);
+                Log.d(TAG, user.getEmail());
+                receiverToken = user.getToken();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
 }
