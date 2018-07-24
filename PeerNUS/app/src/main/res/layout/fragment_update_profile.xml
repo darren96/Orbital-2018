@@ -58,6 +58,7 @@
                 android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:digits="^[a-zA-Z ]+$"
                 android:fontFamily="@font/montserrat_regular"
                 android:hint="John Doe"/>
 
@@ -125,6 +126,7 @@
                 android:layout_width="210dp"
                 android:layout_height="wrap_content"
                 android:hint="1, 2, 3, 4 or 5"
+                android:digits="1,2,3,4,5"
                 android:fontFamily="@font/montserrat_regular"
                 android:inputType="number"/>
 
@@ -213,6 +215,7 @@
                         android:id="@+id/selectedModuleId"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:digits="^[A-Za-z]{2}[0-9]{4}\z"
                         android:visibility="gone"/>
 
                     <Button
