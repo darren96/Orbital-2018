@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -54,6 +55,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -199,6 +202,8 @@ public class UpdateProfileFragment extends Fragment
         mAddCourseBtn = (Button) view.findViewById(R.id.btnAddCourse);
         mAddModuleBtn = (Button) view.findViewById(R.id.btnAddModule);
         mSaveProfileBtn = (Button) view.findViewById(R.id.btnSaveProfile);
+
+        mYearofStudies.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
 
         Log.d("isRegistered in Update", String.valueOf(isRegistered));
 
@@ -394,26 +399,38 @@ public class UpdateProfileFragment extends Fragment
     private void addModule() {
         String modCode = mModule.getText().toString().toUpperCase();
 
-        if (!modCode.equals("") || modCode != null) {
+        String expression = "^[A-Za-z]{2}[0-9]{4}\\z";
+        CharSequence inputStr = modCode;
+        Pattern pattern = Pattern.compile(expression);
+        Matcher matcher = pattern.matcher(inputStr);
 
-            String mModuleListStr = mModuleList.getText().toString();
+        if(matcher.matches())
+        {
+            if (!modCode.equals("") || modCode != null) {
 
-            if (isInitialAddModule) {
-                selectedModuleList = new ArrayList<>();
-                mModuleListStr = "";
-                isInitialAddModule = false;
+                String mModuleListStr = mModuleList.getText().toString();
+
+                if (isInitialAddModule) {
+                    selectedModuleList = new ArrayList<>();
+                    mModuleListStr = "";
+                    isInitialAddModule = false;
+                }
+
+                if (!selectedModuleList.contains(modCode)) {
+                    mModuleList.setText(mModuleListStr + modCode + "\n");
+                } else {
+                    Toast.makeText(getActivity(), "You have already added the module!", Toast.LENGTH_LONG).show();
+                }
+
+                selectedModuleList.add(modCode);
+                mModule.setText("");
+
             }
-
-            if (!selectedModuleList.contains(modCode)) {
-                mModuleList.setText(mModuleListStr + modCode + "\n");
-            } else {
-                Toast.makeText(getActivity(), "You have already added the module!", Toast.LENGTH_LONG).show();
-            }
-
-            selectedModuleList.add(modCode);
-            mModule.setText("");
-
+        } else {
+            Toast.makeText(getActivity(), "Invalid module code!", Toast.LENGTH_LONG).show();
         }
+
+
 
     }
 
