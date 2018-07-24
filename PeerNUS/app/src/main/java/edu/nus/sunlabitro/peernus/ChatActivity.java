@@ -448,7 +448,6 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);
-                Log.d(TAG, user.getEmail());
                 receiverToken = user.getToken();
             }
 
