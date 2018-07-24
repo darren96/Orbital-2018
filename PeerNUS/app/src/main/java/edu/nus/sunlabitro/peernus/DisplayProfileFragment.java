@@ -495,7 +495,7 @@ public class DisplayProfileFragment extends Fragment
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        
+
         return jsonText.toString();
     }
 
