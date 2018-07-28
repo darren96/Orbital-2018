@@ -3,6 +3,7 @@ package edu.nus.sunlabitro.peernus;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
@@ -16,19 +17,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
-import android.text.Editable;
 import android.text.InputFilter;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
@@ -55,8 +54,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -94,16 +91,15 @@ public class UpdateProfileFragment extends Fragment
     private boolean isRegistered;
     private String mParam2;
 
-    private EditText mName;
+    private TextView mName;
     private RadioGroup mSex;
     private EditText mYearofStudies;
     private ImageView mProfilePic;
     private Spinner mCourse;
     private TextView mCourseList;
-    private EditText mModule;
     private TextView mModuleList;
     private TextView mModuleSelectedId;
-    private ListView mModuleListView;
+    private AutoCompleteTextView mModuleListView;
     private EditText mDescription;
 
     private Button mAddCourseBtn;
@@ -185,17 +181,17 @@ public class UpdateProfileFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        getActivity().setTitle("PeerNUS");
         View view = inflater.inflate(R.layout.fragment_update_profile, container, false);
 
         mProfilePic = (ImageView) view.findViewById(R.id.profilePic);
-        mName = (EditText) view.findViewById(R.id.name);
+        mName = (TextView) view.findViewById(R.id.name);
         mSex = (RadioGroup) view.findViewById(R.id.sex);
         mYearofStudies = (EditText) view.findViewById(R.id.yearOfStudies);
         mCourse = (Spinner) view.findViewById(R.id.course);
         mCourseList = (TextView) view.findViewById(R.id.courseList);
-        mModule = (EditText) view.findViewById(R.id.module);
         mModuleList = (TextView) view.findViewById(R.id.moduleList);
-        mModuleListView = (ListView) view.findViewById(R.id.moduleListView);
+        mModuleListView = (AutoCompleteTextView) view.findViewById(R.id.moduleListView);
         mModuleSelectedId = (TextView) view.findViewById(R.id.selectedModuleId);
         mDescription = (EditText) view.findViewById(R.id.description);
 
@@ -242,34 +238,6 @@ public class UpdateProfileFragment extends Fragment
             }
         });
 
-        mModule.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                ModuleListAdapter moduleListAdapter =
-                        new ModuleListAdapter(getActivity(), generateData(s.toString()));
-                mModuleListView.setAdapter(moduleListAdapter);
-                mModuleListView.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
-        mModule.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    mModuleListView.setVisibility(View.INVISIBLE);
-                }
-            }
-        });
 
         mModuleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -279,7 +247,6 @@ public class UpdateProfileFragment extends Fragment
                 String selectedModuleId = mModuleId.getText().toString();
                 String selectedModuleCode = mModuleCode.getText().toString();
                 selectModule(selectedModuleId, selectedModuleCode);
-                mModuleListView.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -392,45 +359,33 @@ public class UpdateProfileFragment extends Fragment
     }
 
     private void selectModule(String selectedModuleId, String selectedModuleCode) {
-        mModule.setText(selectedModuleCode);
+        mModuleListView.setText(selectedModuleCode);
         mModuleSelectedId.setText(selectedModuleId);
     }
 
     private void addModule() {
-        String modCode = mModule.getText().toString().toUpperCase();
+        String modCode = mModuleListView.getText().toString().toUpperCase();
 
-        String expression = "^[A-Za-z]{2}[0-9]{4}\\z";
-        CharSequence inputStr = modCode;
-        Pattern pattern = Pattern.compile(expression);
-        Matcher matcher = pattern.matcher(inputStr);
+        if (!modCode.equals("") || modCode != null) {
 
-        if(matcher.matches())
-        {
-            if (!modCode.equals("") || modCode != null) {
+            String mModuleListStr = mModuleList.getText().toString();
 
-                String mModuleListStr = mModuleList.getText().toString();
-
-                if (isInitialAddModule) {
-                    selectedModuleList = new ArrayList<>();
-                    mModuleListStr = "";
-                    isInitialAddModule = false;
-                }
-
-                if (!selectedModuleList.contains(modCode)) {
-                    mModuleList.setText(mModuleListStr + modCode + "\n");
-                } else {
-                    Toast.makeText(getActivity(), "You have already added the module!", Toast.LENGTH_LONG).show();
-                }
-
-                selectedModuleList.add(modCode);
-                mModule.setText("");
-
+            if (isInitialAddModule) {
+                selectedModuleList = new ArrayList<>();
+                mModuleListStr = "";
+                isInitialAddModule = false;
             }
-        } else {
-            Toast.makeText(getActivity(), "Invalid module code!", Toast.LENGTH_LONG).show();
+
+            if (!selectedModuleList.contains(modCode)) {
+                mModuleList.setText(mModuleListStr + modCode + "\n");
+            } else {
+                Toast.makeText(getActivity(), "You have already added the module!", Toast.LENGTH_LONG).show();
+            }
+
+            selectedModuleList.add(modCode);
+            mModuleListView.setText("");
+
         }
-
-
 
     }
 
@@ -508,6 +463,13 @@ public class UpdateProfileFragment extends Fragment
                     e.printStackTrace();
                 }
             }
+
+            ModuleListAdapter moduleListAdapter =
+                    new ModuleListAdapter(getActivity(), generateData());
+
+            mModuleListView.setAdapter(moduleListAdapter);
+
+
         } else if (REQ_TYPE.equals(registerProfile) || REQ_TYPE.equals(updateProfile)) {
             if (profilePicUri != null) {
                 uploadImage();
@@ -531,25 +493,21 @@ public class UpdateProfileFragment extends Fragment
         void onFragmentInteraction(Uri uri);
     }
 
-    private ArrayList<Module> generateData(String query){
-        int count = 0;
+    private ArrayList<Module> generateData(){
         ArrayList<Module> moduleArrayList = new ArrayList<>();
         JSONObject moduleObj = null;
         String modCode;
         String modTitle;
         for (int i = 0; i < modules.length(); i++) {
-            if (count <= 5) {
-                try {
-                    moduleObj = modules.getJSONObject(i);
-                    modCode = moduleObj.getString("ModuleCode");
-                    modTitle = moduleObj.getString("ModuleTitle");
-                    if (modCode.contains(query) || modTitle.contains(query)) {
-                        moduleArrayList.add(new Module (i, modCode, modTitle));
-                        count++;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            try {
+                moduleObj = modules.getJSONObject(i);
+                modCode = moduleObj.getString("ModuleCode");
+                modTitle = moduleObj.getString("ModuleTitle");
+
+                moduleArrayList.add(new Module (i, modCode, modTitle));
+
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
 
@@ -646,6 +604,8 @@ public class UpdateProfileFragment extends Fragment
                 View headerView = navigationView.getHeaderView(0);
                 ImageView headerProfilePic = (ImageView) headerView.findViewById(R.id.profilePic);
                 Bitmap roundedImage = imageRounded(bitmap);
+
+                Toast.makeText(getActivity(), "Image uploaded successfully!", Toast.LENGTH_LONG).show();
 
                 headerProfilePic.setImageBitmap(roundedImage);
             }
@@ -769,4 +729,21 @@ public class UpdateProfileFragment extends Fragment
         return imageRounded;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        HOST = getString(R.string.HOST);
+        PROFILE_DIR = getString(R.string.PROFILE_DIR);
+        COURSES_DIR = getString(R.string.COURSES_DIR);
+        NUSMOD_HOST = getString(R.string.NUSMOD_HOST);
+        MOD_DIR = getString(R.string.MOD_DIR);
+        USER_PREF = getString(R.string.USER_PREF);
+
+        sharedPreferences = getActivity()
+                .getSharedPreferences(USER_PREF, MODE_PRIVATE);
+        nusnet = sharedPreferences.getString("email", "");
+
+        getAllCourses();
+        getAllModules();
+    }
 }

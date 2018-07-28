@@ -12,6 +12,10 @@ import android.graphics.Shader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -25,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -56,7 +61,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
+public class ChatActivity extends AppCompatActivity
+        implements OnTaskCompleted, DisplayProfileFragment.OnFragmentInteractionListener {
 
     private FirebaseDatabase database;
     private FirebaseStorage storage;
@@ -70,12 +76,14 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
     private static String FIREBASE_ADMIN_HOST;
     private final int ONE_MEGABYTE = 2048 * 2048;
 
+    private LinearLayout mProfileBar;
     private ImageView mProfilePicImageView;
     private TextView mFriendNameTextView;
     private RecyclerView mChatList;
     private ImageView mUploadImageView;
     private EditText mMessageEditText;
     private Button mSendMsgBtn;
+    private FrameLayout mFrame;
 
     private String chatroomId;
     private int userId;
@@ -94,6 +102,11 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
 
     private final String TAG = "ChatActivity";
     private final int PICK_IMAGE = 101;
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 
     public static class MessagesViewHolder extends RecyclerView.ViewHolder {
         public TextView mMessageTextView;
@@ -145,12 +158,35 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
 
         messages = new ArrayList<>();
 
-        mProfilePicImageView = (ImageView) findViewById(R.id.profilePic);
+        mProfileBar = (LinearLayout) findViewById(R.id.profileBar);
+        mProfilePicImageView = (ImageView) findViewById(R.id.smallProfilePic);
         mFriendNameTextView = (TextView) findViewById(R.id.friendName);
+        mFrame = (FrameLayout) findViewById(R.id.fragment_frame);
 
         if (profilePicId > 0) {
             retrieveProfilePic();
         }
+
+        mProfileBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (getSupportFragmentManager().getBackStackEntryCount() < 1) {
+                    Fragment fragment = new DisplayProfileFragment();
+                    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+                    // Replace whatever is in the fragment_container view with this fragment,
+                    // and add the transaction to the back stack
+                    Bundle args = new Bundle();
+                    args.putString("nusnet", email);
+                    args.putString("purpose", "showFriendInfo");
+                    fragment.setArguments(args);
+                    transaction.replace(R.id.fragment_frame, fragment);
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                    mFrame.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
         mFriendNameTextView.setText(receiverName);
 
@@ -468,7 +504,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
 
-        storageRef.child("images/" + userId).getBytes(ONE_MEGABYTE)
+        storageRef.child("images/" + profilePicId).getBytes(ONE_MEGABYTE)
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                     @Override
                     public void onSuccess(byte[] bytes) {
@@ -487,7 +523,7 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         });
     }
 
-    public static Bitmap imageRounded(Bitmap bitmap) {
+    private Bitmap imageRounded(Bitmap bitmap) {
         Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
                 bitmap.getHeight(), bitmap.getConfig());
         Canvas canvas = new Canvas(imageRounded);
@@ -498,6 +534,12 @@ public class ChatActivity extends AppCompatActivity implements OnTaskCompleted {
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
                 bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
         return imageRounded;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        mFrame.setVisibility(View.GONE);
     }
 
 }

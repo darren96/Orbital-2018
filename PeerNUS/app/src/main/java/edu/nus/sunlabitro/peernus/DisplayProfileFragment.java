@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,11 +34,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
-
-import java.io.ByteArrayOutputStream;
 
 
 /**
@@ -68,6 +64,7 @@ public class DisplayProfileFragment extends Fragment
     private final String getMatches = "getMatches";
     private final String retrieveRequests = "getRequests";
     private final String retrieveFriends = "getFriends";
+    private final String showFriendInfo = "showFriendInfo";
 
     private final int ONE_MEGABYTE = 2048 * 2048;
 
@@ -83,11 +80,16 @@ public class DisplayProfileFragment extends Fragment
     private String nusnet;
     private String purpose;
     private Bitmap bitmap;
+    private int profilePicId;
     private String receiverToken;
+    private int profileId;
     private int userId;
     private String username;
     private int senderId;
     private int receiverId;
+    private boolean isFriend;
+    private boolean isSentRequest;
+    private boolean isReceivedRequest;
 
     private ImageView mProfilePic;
     private TextView nameTV;
@@ -145,15 +147,15 @@ public class DisplayProfileFragment extends Fragment
 
         sharedPreferences = getActivity()
                 .getSharedPreferences(USER_PREF, Context.MODE_PRIVATE);
-
+        userId = sharedPreferences.getInt("id", 0);
         username = sharedPreferences.getString("name", "");
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        getActivity().setTitle("PeerNUS");
         View view = inflater.inflate(R.layout.fragment_display_profile, container, false);
 
         nameTV = (TextView) view.findViewById(R.id.name);
@@ -208,6 +210,9 @@ public class DisplayProfileFragment extends Fragment
             });
             btnSendMessage.setVisibility(View.VISIBLE);
             btnUnFriend.setVisibility(View.VISIBLE);
+        } else if (purpose.equals(showFriendInfo)) {
+            btnSendMessage.setVisibility(View.INVISIBLE);
+            btnUnFriend.setVisibility(View.INVISIBLE);
         }
 
         retrieveProfile();
@@ -264,7 +269,7 @@ public class DisplayProfileFragment extends Fragment
 
     private void sendRequest() {
         senderId = sharedPreferences.getInt("id", 0);
-        receiverId = userId;
+        receiverId = profileId;
         String REQ_TYPE = sendRequest;
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
@@ -275,8 +280,8 @@ public class DisplayProfileFragment extends Fragment
 
     private void acceptRequest() {
         String REQ_TYPE = acceptRequest;
-        senderId = userId;
-        receiverId = sharedPreferences.getInt("id", 0);
+        senderId = profileId;
+        receiverId = userId;
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/acceptRequest.php", jsonString, "POST",
@@ -285,8 +290,13 @@ public class DisplayProfileFragment extends Fragment
 
     private void cancelRequest() {
         String REQ_TYPE = cancelRequest;
-        senderId = userId;
-        receiverId = sharedPreferences.getInt("id", 0);
+        if (isSentRequest) {
+            senderId = userId;
+            receiverId = profileId;
+        } else {
+            senderId = profileId;
+            receiverId = userId;
+        }
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+REQUEST_DIR+"/cancelRequest.php", jsonString, "POST",
@@ -295,8 +305,8 @@ public class DisplayProfileFragment extends Fragment
 
     private void unFriend() {
         String REQ_TYPE = unFriend;
-        senderId = userId;
-        receiverId = sharedPreferences.getInt("id", 0);
+        senderId = profileId;
+        receiverId = userId;
         String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://"+HOST+"/"+FRIEND_DIR+"/unFriend.php", jsonString, "POST",
@@ -305,14 +315,14 @@ public class DisplayProfileFragment extends Fragment
 
     private void sendMessage() {
         senderId = sharedPreferences.getInt("id", 0);
-        receiverId = userId;
+        receiverId = profileId;
         Intent intent = new Intent(getActivity(), ChatActivity.class);
 
         Bundle bundle = new Bundle();
         bundle.putInt("receiverId", receiverId);
         bundle.putString("receiverName", nameTV.getText().toString());
         bundle.putString("email", nusnet);
-        bundle.putInt("profilePicId", 0);
+        bundle.putInt("profilePicId", profilePicId);
 
         intent.putExtras(bundle);
         startActivity(intent);
@@ -325,7 +335,7 @@ public class DisplayProfileFragment extends Fragment
     }
 
     // Convert profile information to JSON string
-    public String convertToJSON(String REQ_TYPE) {
+    private String convertToJSON(String REQ_TYPE) {
         JSONStringer jsonText = new JSONStringer();
         try {
 
@@ -333,12 +343,32 @@ public class DisplayProfileFragment extends Fragment
             if (REQ_TYPE.equals(retrieveProfile)) {
                 jsonText.key("nusnet");
                 jsonText.value(nusnet);
+                jsonText.key("userId");
+                jsonText.value(userId);
             } else if (REQ_TYPE.equals(sendRequest) || REQ_TYPE.equals(acceptRequest)
                     || REQ_TYPE.equals(cancelRequest) || REQ_TYPE.equals(unFriend)) {
                 jsonText.key("senderId");
                 jsonText.value(senderId);
                 jsonText.key("receiverId");
                 jsonText.value(receiverId);
+            } else {
+                jsonText.key("notification");
+                jsonText.object();
+                jsonText.key("title");
+                if (REQ_TYPE.equals(sendRequest)) {
+                    jsonText.value("Friend Request");
+                } else if (REQ_TYPE.equals(acceptRequest)) {
+                    jsonText.value("Friend");
+                }
+                jsonText.key("body");
+                if (REQ_TYPE.equals(sendRequest)) {
+                    jsonText.value("You have received a friend request from " + username + ".");
+                } else if (REQ_TYPE.equals(acceptRequest)) {
+                    jsonText.value("You and " + username + " are friends now. You can start and chat now.");
+                }
+                jsonText.endObject();
+                jsonText.key("token");
+                jsonText.value(receiverToken);
             }
             jsonText.endObject();
 
@@ -353,8 +383,8 @@ public class DisplayProfileFragment extends Fragment
         try {
             JSONObject jsonObject = new JSONObject(message);
 
-            if (REQ_TYPE.equals(retrieveProfile)) {
-                userId = jsonObject.getInt("id");
+            if (REQ_TYPE.equals(retrieveProfile) || REQ_TYPE.equals(showFriendInfo)) {
+                profileId = jsonObject.getInt("id");
 
                 String name = jsonObject.getString("name");
                 String sex = jsonObject.getString("sex");
@@ -373,7 +403,11 @@ public class DisplayProfileFragment extends Fragment
                 }
 
                 String description = jsonObject.getString("description");
-                int profilePic = jsonObject.getInt("profilePic");
+                profilePicId = jsonObject.getInt("profilePic");
+
+                isFriend = jsonObject.getBoolean("isFriend");
+                isSentRequest = jsonObject.getBoolean("isSentRequest");
+                isReceivedRequest = jsonObject.getBoolean("isReceivedRequest");
 
                 nameTV.setText(name);
                 sexTV.setText(sex);
@@ -382,21 +416,17 @@ public class DisplayProfileFragment extends Fragment
                 modulesTV.setText(moduleStr);
                 descriptionTV.setText(description);
 
-                Log.d("DisplayProfileFragment", String.valueOf(profilePic));
-
-                if (profilePic != 0) {
+                if (profilePicId != 0) {
                     FirebaseStorage storage = FirebaseStorage.getInstance();
                     StorageReference storageRef = storage.getReference();
 
-                    storageRef.child("images/" + userId).getBytes(ONE_MEGABYTE)
+                    storageRef.child("images/" + profileId).getBytes(ONE_MEGABYTE)
                             .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                 @Override
                                 public void onSuccess(byte[] bytes) {
                                     // Use the bytes to display the image
                                     bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-                                    mProfilePic = (ImageView) getActivity()
-                                            .findViewById(R.id.profilePic);
+                                    mProfilePic = getActivity().findViewById(R.id.profilePic);
                                     bitmap = imageRounded(bitmap);
                                     mProfilePic.setImageBitmap(bitmap);
 
@@ -410,6 +440,28 @@ public class DisplayProfileFragment extends Fragment
                 }
 
                 retrieveReceiverToken();
+
+
+                if (isFriend) {
+                    btnUnFriend.setVisibility(View.VISIBLE);
+                    btnSendMessage.setVisibility(View.VISIBLE);
+                    btnSendRequest.setVisibility(View.GONE);
+                }
+                if (isSentRequest) {
+                    btnCancelRequest.setVisibility(View.VISIBLE);
+                    btnCancelRequest.setText("Cancel Request");
+                    btnSendRequest.setVisibility(View.GONE);
+                }
+                if (isReceivedRequest) {
+                    btnAcceptRequest.setVisibility(View.VISIBLE);
+                    btnCancelRequest.setVisibility(View.VISIBLE);
+                    btnCancelRequest.setText("Cancel");
+                }
+                if (purpose.equals(showFriendInfo)) {
+                    btnUnFriend.setVisibility(View.INVISIBLE);
+                    btnSendMessage.setVisibility(View.INVISIBLE);
+                }
+
 
             } else if (REQ_TYPE.equals(sendRequest)) {
                 String status = jsonObject.getString("Status");
@@ -463,43 +515,13 @@ public class DisplayProfileFragment extends Fragment
     }
 
     private void sendNotification(String REQ_TYPE) {
-        String jsonString = convertToJsonString(REQ_TYPE);
+        String jsonString = convertToJSON(REQ_TYPE);
         HttpAsyncTask task = new HttpAsyncTask(this);
         task.execute("https://" + FIREBASE_ADMIN_HOST + "/sendMessage", jsonString, "POST", REQ_TYPE);
 
     }
 
-    private String convertToJsonString(String REQ_TYPE) {
-        JSONStringer jsonText = new JSONStringer();
-
-        try {
-            jsonText.object();
-            jsonText.key("notification");
-            jsonText.object();
-            jsonText.key("title");
-            if (REQ_TYPE.equals(sendRequest)) {
-                jsonText.value("Friend Request");
-            } else if (REQ_TYPE.equals(acceptRequest)) {
-                jsonText.value("Friend");
-            }
-            jsonText.key("body");
-            if (REQ_TYPE.equals(sendRequest)) {
-                jsonText.value("You have received a friend request from " + username + ".");
-            } else if (REQ_TYPE.equals(acceptRequest)) {
-                jsonText.value("You and " + username + " are friends now. You can start and chat now.");
-            }
-            jsonText.endObject();
-            jsonText.key("token");
-            jsonText.value(receiverToken);
-            jsonText.endObject();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return jsonText.toString();
-    }
-
-    public static Bitmap imageRounded(Bitmap bitmap) {
+    private Bitmap imageRounded(Bitmap bitmap) {
         Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
                 bitmap.getHeight(), bitmap.getConfig());
         Canvas canvas = new Canvas(imageRounded);

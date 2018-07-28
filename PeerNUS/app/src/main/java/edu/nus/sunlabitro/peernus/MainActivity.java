@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity
     private TextView mName;
     private TextView mEmail;
     private ImageView mProfilePic;
+    private ActionBarDrawerToggle toggle;
 
     private SharedPreferences sharedPreferences;
     private boolean isRegistered;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
@@ -333,6 +334,8 @@ public class MainActivity extends AppCompatActivity
                 getProfileImage();
             }
 
+            toggle.setDrawerIndicatorEnabled(true);
+
             email = sharedPreferences.getString("email", "");
             name = sharedPreferences.getString("name", "");
 
@@ -357,6 +360,9 @@ public class MainActivity extends AppCompatActivity
             // Commit the transaction
             transaction.commit();
         } else {
+
+            toggle.setDrawerIndicatorEnabled(false);
+
             Fragment fragment = new UpdateProfileFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 

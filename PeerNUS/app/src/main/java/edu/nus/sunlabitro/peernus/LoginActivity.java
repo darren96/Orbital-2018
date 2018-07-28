@@ -33,6 +33,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class LoginActivity extends AppCompatActivity
         implements OnTaskCompleted {
 
@@ -229,6 +232,7 @@ public class LoginActivity extends AppCompatActivity
     }
 
     public void updateUI(FirebaseUser user) {
+        mLoadingFrame.setVisibility(View.GONE);
         Intent intent = null;
 
         if (user != null) {
@@ -256,25 +260,38 @@ public class LoginActivity extends AppCompatActivity
     }
 
     public void openChromeTab() {
-        email = mEmail.getText().toString();
-        final String url = "https://peernus.000webhostapp.com/openid.php?nusnet_id=" + email;
-        CustomTabsServiceConnection connection = new CustomTabsServiceConnection() {
-            @Override
-            public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient client) {
-                CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-                builder.setToolbarColor(getResources().getColor(R.color.colorPrimary));
-                CustomTabsIntent intent = builder.build();
-                client.warmup(0L);
-                intent.launchUrl(LoginActivity.this, Uri.parse(url));
-            }
+        email = mEmail.getText().toString().toLowerCase();
+        String nusnet_pattern = "[A,E,a,e]{1}[0-9]{7}$";
+        Pattern pattern = Pattern.compile(nusnet_pattern);
+        Matcher matcher = pattern.matcher(email);
 
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
+        if (email == null && email.length() == 0) {
+            mEmail.setError("Please fill in your NUSNet ID.");
+            return;
+        } else if (!matcher.matches()) {
+            mEmail.setError("Invalid NUSNet");
+        } else {
 
-            }
-        };
+            final String url = "https://peernus.000webhostapp.com/openid.php?nusnet_id=" + email;
+            CustomTabsServiceConnection connection = new CustomTabsServiceConnection() {
+                @Override
+                public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient client) {
+                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                    builder.setToolbarColor(getResources().getColor(R.color.colorPrimary));
+                    CustomTabsIntent intent = builder.build();
+                    client.warmup(0L);
+                    intent.launchUrl(LoginActivity.this, Uri.parse(url));
+                }
 
-        CustomTabsClient.bindCustomTabsService(this, "com.android.chrome", connection);
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+
+                }
+            };
+
+            CustomTabsClient.bindCustomTabsService(this, "com.android.chrome", connection);
+
+        }
     }
 
     @Override
@@ -317,12 +334,14 @@ public class LoginActivity extends AppCompatActivity
                                     updateUI(user);
                                 } else {
                                     Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_LONG).show();
+                                    mLoadingFrame.setVisibility(View.GONE);
                                 }
                             }
                         });
+            } else if (status.equals("NOK")) {
+                mLoadingFrame.setVisibility(View.GONE);
             }
         }
-        mLoadingFrame.setVisibility(View.GONE);
     }
 
     private String convertToJSON(String REQ_TYPE) {

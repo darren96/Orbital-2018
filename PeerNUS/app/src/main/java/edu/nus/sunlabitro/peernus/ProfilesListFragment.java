@@ -109,10 +109,13 @@ public class ProfilesListFragment extends Fragment
 
         if (purpose.equals(getMatches)) {
             getMatches();
+            getActivity().setTitle("PeerNUS - Matches");
         } else if (purpose.equals(retrieveRequests)) {
             getRequests();
+            getActivity().setTitle("PeerNUS - Requests");
         } else if (purpose.equals(retrieveFriends)) {
             getFriends();
+            getActivity().setTitle("PeerNUS - Friends");
         }
 
         return view;
