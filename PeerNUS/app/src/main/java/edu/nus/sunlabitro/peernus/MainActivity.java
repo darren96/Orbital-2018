@@ -206,8 +206,6 @@ public class MainActivity extends AppCompatActivity
 
             // Commit the transaction
             transaction.commit();
-        } else if (id == R.id.nav_chat) {
-
         } else if (id == R.id.nav_logout) {
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);

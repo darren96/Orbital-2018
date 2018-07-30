@@ -26,19 +26,4 @@
             android:title="Logout" />
     </group>
 
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_chat"
-                android:icon="@drawable/baseline_chat_black_18dp"
-                android:title="Chats"
-                android:enabled="false" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send"
-                android:enabled="false" />
-        </menu>
-    </item>
-
 </menu>
