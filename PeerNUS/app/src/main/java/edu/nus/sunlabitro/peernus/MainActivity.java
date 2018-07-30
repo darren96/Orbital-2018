@@ -404,7 +404,7 @@ public class MainActivity extends AppCompatActivity
         mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
                 Shader.TileMode.CLAMP));
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
-                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+                bitmap.getWidth())), mpaint);
         return imageRounded;
     }
 

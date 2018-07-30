@@ -60,5 +60,9 @@ public class PeerNUSFirebaseMessagingService extends FirebaseMessagingService {
         // message, here is where that should be initiated. See sendNotification method below.
     }
 
+    public void r() {
+
+    }
+
 
 }

@@ -65,6 +65,7 @@ public class DisplayProfileFragment extends Fragment
     private final String retrieveRequests = "getRequests";
     private final String retrieveFriends = "getFriends";
     private final String showFriendInfo = "showFriendInfo";
+    private final String sendNotification = "sendNotification";
 
     private final int ONE_MEGABYTE = 2048 * 2048;
 
@@ -170,44 +171,43 @@ public class DisplayProfileFragment extends Fragment
         btnSendMessage = (Button) view.findViewById(R.id.btnSendMessage);
         btnUnFriend = (Button) view.findViewById(R.id.btnUnFriend);
 
-        if (purpose.equals(getMatches)) {
-            btnSendRequest.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    sendRequest();
-                }
-            });
+        btnSendRequest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendRequest();
+            }
+        });
+        btnAcceptRequest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acceptRequest();
+            }
+        });
+        btnCancelRequest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cancelRequest();
+            }
+        });
+        btnSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessage();
+            }
+        });
+        btnUnFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                unFriend();
+            }
+        });
 
+        if (purpose.equals(getMatches)) {
             btnSendRequest.setVisibility(View.VISIBLE);
         } else if (purpose.equals(retrieveRequests)) {
-            btnAcceptRequest.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    acceptRequest();
-                }
-            });
-            btnCancelRequest.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    cancelRequest();
-                }
-            });
-
             btnAcceptRequest.setVisibility(View.VISIBLE);
             btnCancelRequest.setVisibility(View.VISIBLE);
         } else if (purpose.equals(retrieveFriends)) {
-            btnSendMessage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    sendMessage();
-                }
-            });
-            btnUnFriend.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    unFriend();
-                }
-            });
             btnSendMessage.setVisibility(View.VISIBLE);
             btnUnFriend.setVisibility(View.VISIBLE);
         } else if (purpose.equals(showFriendInfo)) {
@@ -355,15 +355,15 @@ public class DisplayProfileFragment extends Fragment
                 jsonText.key("notification");
                 jsonText.object();
                 jsonText.key("title");
-                if (REQ_TYPE.equals(sendRequest)) {
+                if (purpose.equals(sendRequest)) {
                     jsonText.value("Friend Request");
-                } else if (REQ_TYPE.equals(acceptRequest)) {
+                } else if (purpose.equals(acceptRequest)) {
                     jsonText.value("Friend");
                 }
                 jsonText.key("body");
-                if (REQ_TYPE.equals(sendRequest)) {
+                if (purpose.equals(sendRequest)) {
                     jsonText.value("You have received a friend request from " + username + ".");
-                } else if (REQ_TYPE.equals(acceptRequest)) {
+                } else if (purpose.equals(acceptRequest)) {
                     jsonText.value("You and " + username + " are friends now. You can start and chat now.");
                 }
                 jsonText.endObject();
@@ -458,8 +458,8 @@ public class DisplayProfileFragment extends Fragment
                     btnCancelRequest.setText("Cancel");
                 }
                 if (purpose.equals(showFriendInfo)) {
-                    btnUnFriend.setVisibility(View.INVISIBLE);
-                    btnSendMessage.setVisibility(View.INVISIBLE);
+                    btnUnFriend.setVisibility(View.GONE);
+                    btnSendMessage.setVisibility(View.GONE);
                 }
 
 
@@ -468,7 +468,8 @@ public class DisplayProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Friends Request Sent", Toast.LENGTH_LONG)
                             .show();
-                    sendNotification(sendRequest);
+                    purpose = sendRequest;
+                    sendNotification(sendNotification);
                 } else {
                     Toast.makeText(getActivity(), "Request Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
@@ -478,9 +479,12 @@ public class DisplayProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Friends Request Accepted", Toast.LENGTH_LONG)
                             .show();
-                    sendNotification(acceptRequest);
-                    btnAcceptRequest.setVisibility(View.INVISIBLE);
-                    btnCancelRequest.setVisibility(View.INVISIBLE);
+                    purpose = acceptRequest;
+                    sendNotification(sendNotification);
+                    btnAcceptRequest.setVisibility(View.GONE);
+                    btnCancelRequest.setVisibility(View.GONE);
+                    btnSendMessage.setVisibility(View.VISIBLE);
+                    btnUnFriend.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(getActivity(), "Acceptance Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
@@ -490,8 +494,9 @@ public class DisplayProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Deleted friend request", Toast.LENGTH_LONG)
                             .show();
-                    btnAcceptRequest.setVisibility(View.INVISIBLE);
-                    btnCancelRequest.setVisibility(View.INVISIBLE);
+                    btnAcceptRequest.setVisibility(View.GONE);
+                    btnCancelRequest.setVisibility(View.GONE);
+                    btnSendRequest.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(getActivity(), "Cancellation Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
@@ -501,8 +506,9 @@ public class DisplayProfileFragment extends Fragment
                 if (status.equals("OK")) {
                     Toast.makeText(getActivity(), "Removed from friend list", Toast.LENGTH_LONG)
                             .show();
-                    btnSendMessage.setVisibility(View.INVISIBLE);
-                    btnUnFriend.setVisibility(View.INVISIBLE);
+                    btnSendMessage.setVisibility(View.GONE);
+                    btnUnFriend.setVisibility(View.GONE);
+                    btnSendRequest.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(getActivity(), "Unfriend Failed. Please Try Again Later.", Toast.LENGTH_LONG)
                             .show();
@@ -530,18 +536,19 @@ public class DisplayProfileFragment extends Fragment
         mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
                 Shader.TileMode.CLAMP));
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
-                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+                bitmap.getWidth())), mpaint);
         return imageRounded;
     }
 
     private void retrieveReceiverToken() {
         DatabaseReference userReference = database.getReference("users");
-        userReference.child(String.valueOf(receiverId))
+        userReference.child(String.valueOf(profileId))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         User user = dataSnapshot.getValue(User.class);
                         receiverToken = user.getToken();
+                        Log.d("DisplayProfileFragment", receiverToken);
                     }
 
                     @Override

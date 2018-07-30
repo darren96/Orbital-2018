@@ -1,5 +1,6 @@
 package edu.nus.sunlabitro.peernus;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +15,8 @@ import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -49,6 +52,7 @@ import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -86,6 +90,7 @@ public class UpdateProfileFragment extends Fragment
     private static String updateProfile = "105";
 
     private static final int PICK_IMAGE = 1;
+    private static final int RESULT_CROP = 2;
 
     // TODO: Rename and change types of parameters
     private boolean isRegistered;
@@ -210,6 +215,7 @@ public class UpdateProfileFragment extends Fragment
         mProfilePic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Intent getIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 getIntent.setType("image/*");
 
@@ -716,6 +722,24 @@ public class UpdateProfileFragment extends Fragment
         }
     }
 
+    private void performCrop(Uri uri) {
+
+        Intent cropIntent = new Intent("com.android.camera.action.CROP");
+        // indicate image type and Uri
+        cropIntent.setDataAndType(uri, "image/*");
+        // set crop properties
+        cropIntent.putExtra("crop", "true");
+        // // indicate aspect of desired crop
+        cropIntent.putExtra("aspectX", 1);
+        cropIntent.putExtra("aspectY", 1);
+        // // // indicate output X and Y
+
+        // retrieve data on return
+        cropIntent.putExtra("return-data", true);
+
+        startActivityForResult(cropIntent, RESULT_CROP);
+    }
+
     private Bitmap imageRounded(Bitmap bitmap) {
         Bitmap imageRounded = Bitmap.createBitmap(bitmap.getWidth(),
                 bitmap.getHeight(), bitmap.getConfig());
@@ -725,7 +749,7 @@ public class UpdateProfileFragment extends Fragment
         mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
                 Shader.TileMode.CLAMP));
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
-                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+                bitmap.getWidth())), mpaint);
         return imageRounded;
     }
 

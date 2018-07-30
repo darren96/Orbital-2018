@@ -410,7 +410,7 @@ public class ChatActivity extends AppCompatActivity
                             public void onComplete(DatabaseError databaseError,
                                     DatabaseReference databaseReference) {
                                 if (databaseError == null) {
-                                    String key = mFirebaseDatabaseReference.getKey();
+                                    String key = databaseReference.getKey();
                                     StorageReference storageReference =
                                             FirebaseStorage.getInstance()
                                                     .getReference("chatImages/" + chatroomId)
@@ -532,7 +532,7 @@ public class ChatActivity extends AppCompatActivity
         mpaint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP,
                 Shader.TileMode.CLAMP));
         canvas.drawOval((new RectF(0, 0, bitmap.getWidth(),
-                bitmap.getHeight())), mpaint);// Round Image Corner 100 100 100 100
+                bitmap.getWidth())), mpaint);// Round Image Corner 100 100 100 100
         return imageRounded;
     }
 
